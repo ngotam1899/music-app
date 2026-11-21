@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Music Concert of 10C9</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+</head>
+<body>
+<div class="bg" id="bg"></div>
+
+<header>
+  <div class="top">
+    <div class="brand" data-go="home"><div class="disc"><span></span></div><span>Music Concert of <b>10C9</b></span></div>
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b5480" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Search performances, instruments, merch…" autocomplete="off">
+      <div class="results" id="results"></div>
+    </div>
+    <div class="authArea" id="authArea"></div>
+  </div>
+  <nav id="nav">
+    <button class="tab" data-go="home">🏠 Home</button>
+    <button class="tab" data-go="ticketbox">🎫 Ticketbox</button>
+    <button class="tab" data-go="performance">🎤 Performance</button>
+    <button class="tab" data-go="museum">🎻 Musical Museum</button>
+    <button class="tab" data-go="merch">🛍️ Merchandise Collection</button>
+    <button class="tab" data-go="contact">💌 Contact</button>
+    <button class="tab" data-go="admin" id="adminTab" hidden>🛠️ Admin</button>
+  </nav>
+</header>
+
+<main>
+<!-- HOME -->
+<section class="view" id="home">
+  <div class="hero" id="hero">
+    <div class="slide s1 on">
+      <div><span class="chip">♪ CHARITY CONCERT · CLASS 10C9</span>
+      <h1>Music for Change</h1>
+      <p>Four groups, one stage, one cause. Join Class 10C9 for a night of songs that turn kindness into action.</p>
+      <button class="btn ghost" data-go="ticketbox">Get your free ticket →</button></div>
+      <svg class="art" viewBox="0 0 300 300"><circle cx="190" cy="150" r="110" fill="#fff" opacity=".18"/><circle cx="190" cy="150" r="70" fill="#fff" opacity=".2"/><g fill="#fff"><rect x="120" y="70" width="14" height="140" rx="7"/><ellipse cx="112" cy="212" rx="28" ry="20"/><rect x="230" y="50" width="14" height="140" rx="7"/><ellipse cx="222" cy="192" rx="28" ry="20"/><path d="M127 70 L244 50 L244 80 L127 100Z"/></g></svg>
+    </div>
+    <div class="slide s2">
+      <div><span class="chip">🎤 THE LINE-UP</span>
+      <h1>4 groups. 1 big night.</h1>
+      <p>Acoustic pop, Vietnamese folk remix, a live band and a choir — all performed by 10C9 students.</p>
+      <button class="btn ghost" data-go="performance">Meet the performers →</button></div>
+      <svg class="art" viewBox="0 0 300 300"><g fill="#fff" opacity=".9"><rect x="140" y="40" width="60" height="110" rx="30"/><rect x="164" y="150" width="12" height="80"/><rect x="130" y="228" width="80" height="12" rx="6"/></g><path d="M120 110a50 50 0 0 0 100 0" stroke="#fff" stroke-width="10" fill="none" opacity=".9"/><circle cx="70" cy="80" r="16" fill="#ffc93c"/><circle cx="250" cy="230" r="12" fill="#2ec4a6"/></svg>
+    </div>
+    <div class="slide s3">
+      <div><span class="chip">🎻 MUSICAL MUSEUM</span>
+      <h1>Explore, play, discover</h1>
+      <p>Walk through music history, hear Vietnamese traditional instruments and play our mini piano.</p>
+      <button class="btn ghost" data-go="museum">Enter the museum →</button></div>
+      <svg class="art" viewBox="0 0 300 300"><g fill="#fff" opacity=".85"><path d="M60 230 L150 70 L240 230Z" opacity=".25"/><rect x="80" y="130" width="140" height="100" rx="10" opacity=".35"/></g><g fill="#fff"><rect x="95" y="150" width="16" height="70" rx="3"/><rect x="125" y="150" width="16" height="70" rx="3"/><rect x="155" y="150" width="16" height="70" rx="3"/><rect x="185" y="150" width="16" height="70" rx="3"/></g></svg>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="countdown" id="countdown">
+    <div class="cd-label"><h3 id="evDate">Show night</h3><p>School Hall · Nguyen Van Linh High School</p></div>
+    <div class="cd-box" style="--c:var(--pink)"><b id="cdD">0</b><span>Days</span></div>
+    <div class="cd-box" style="--c:var(--sun)"><b id="cdH">0</b><span>Hours</span></div>
+    <div class="cd-box" style="--c:var(--mint)"><b id="cdM">0</b><span>Minutes</span></div>
+    <div class="cd-box" style="--c:var(--sky)"><b id="cdS">0</b><span>Seconds</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h3>✨ Featured <span class="squiggle">events</span></h3></div>
+    <div class="cats" id="cats"></div>
+    <div class="grid" id="events"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h3>💛 Why we sing</h3></div>
+    <div class="mission">
+      <div class="mbox" style="--bgc:#ffe3ec"><div class="ic">🎶</div><h4>Learn through music</h4><p>A STEAM project from English 10 – Unit 3: Music. Students plan, rehearse and run a real concert in English.</p></div>
+      <div class="mbox" style="--bgc:#e0f3ff"><div class="ic">🤝</div><h4>Raise awareness</h4><p>Every song carries a message about kindness, community and helping people in need.</p></div>
+      <div class="mbox" style="--bgc:#dcfbf2"><div class="ic">🎁</div><h4>Give, don't pay</h4><p>Tickets are free. Instead of paying, guests are invited to donate books, clothes or school supplies.</p></div>
+      <div class="mbox" style="--bgc:#fff1c9"><div class="ic">🌱</div><h4>Teamwork</h4><p>Four student groups share the jobs: performing, staging, media and the donation desk.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKETBOX -->
+<section class="view" id="ticketbox">
+  <h2 class="title">🎫 Ticketbox</h2>
+  <p class="sub">Reserve your seat in four quick steps. <b>All tickets are free</b> — this is a charity concert, so we ask for a donation pledge instead of money.</p>
+  <div class="tb">
+    <div class="panel">
+      <div class="steps" id="steps">
+        <div class="step"><i></i>1 · Ticket</div><div class="step"><i></i>2 · Seat</div><div class="step"><i></i>3 · Details</div><div class="step"><i></i>4 · E-ticket</div>
+      </div>
+      <div id="stepBody"></div>
+      <div class="actions" id="stepActions"></div>
+    </div>
+    <aside class="panel summary" id="summary"></aside>
+  </div>
+</section>
+
+<!-- PERFORMANCE -->
+<section class="view" id="performance">
+  <h2 class="title">🎤 Performance</h2>
+  <p class="sub">Meet the four groups of Class 10C9. Tap the heart to vote for your favourite act — like the voting on a real ticket site.</p>
+  <div class="cats" id="genres"></div>
+  <div class="lineup" id="lineup"></div>
+  <div class="section">
+    <div class="section-head"><h3>🕖 Show running order</h3></div>
+    <div class="timeline" id="runorder"></div>
+  </div>
+</section>
+
+<!-- MUSEUM -->
+<section class="view" id="museum">
+  <h2 class="title">🎻 Musical Museum</h2>
+  <p class="sub">A small interactive exhibition prepared by 10C9. Walk through the eras, listen to the instruments, then test yourself.</p>
+  <div class="halls" id="halls">
+    <button class="cat on" data-hall="h-time">🕰️ Hall 1 · Time Tunnel</button>
+    <button class="cat" data-hall="h-inst">🪕 Hall 2 · Instruments</button>
+    <button class="cat" data-hall="h-piano">🎹 Hall 3 · Play Room</button>
+    <button class="cat" data-hall="h-quiz">❓ Hall 4 · Music Quiz</button>
+  </div>
+  <div id="h-time" class="hall">
+    <div class="era-track" id="eras"></div>
+    <p style="color:var(--ink2);font-size:13.5px">← Swipe or scroll sideways to travel through time →</p>
+  </div>
+  <div id="h-inst" class="hall" hidden><div class="inst-grid" id="insts"></div></div>
+  <div id="h-piano" class="hall" hidden>
+    <div class="piano-wrap">
+      <h3 style="font-family:Fredoka">🎹 Mini piano</h3>
+      <p style="opacity:.8;font-size:14px">Click the keys, or use your keyboard: A S D F G H J K (white) · W E T Y U (black). Try "Twinkle": A A G G H H G</p>
+      <div class="piano" id="piano"></div>
+    </div>
+  </div>
+  <div id="h-quiz" class="hall" hidden><div class="panel" id="quiz"></div></div>
+</section>
+
+<!-- MERCH -->
+<section class="view" id="merch">
+  <h2 class="title">🛍️ Merchandise Collection</h2>
+  <p class="sub">Handmade by 10C9. <b>Not for sale</b> — every item is a thank-you gift for guests who bring a donation on show night.</p>
+  <div class="how">
+    <div><b>1</b><p>Pick the gifts you like and add them to your wishlist.</p></div>
+    <div><b>2</b><p>Bring books, clothes or school supplies to the donation desk.</p></div>
+    <div><b>3</b><p>Show your wishlist and receive a gift while stocks last.</p></div>
+  </div>
+  <div class="cats" id="mcats"></div>
+  <div class="merch-grid" id="mgrid"></div>
+</section>
+
+<!-- CONTACT -->
+<section class="view" id="contact">
+  <h2 class="title">💌 Contact</h2>
+  <p class="sub">Questions about tickets, donations or performing? Reach the 10C9 organising team.</p>
+  <div class="contact">
+    <div>
+      <div class="info-list">
+        <div class="info"><div class="ic" style="--bgc:#ffe3ec">📍</div><div><h4>Venue</h4><p>Nguyen Van Linh High School<br>No.2, 3154 Pham The Hien Street, Binh Dong Ward, HCMC</p></div></div>
+        <div class="info"><div class="ic" style="--bgc:#e0f3ff">🏫</div><div><h4>Organiser</h4><p>Class 10C9 — Music Concert team</p></div></div>
+        <div class="info"><div class="ic" style="--bgc:#dcfbf2">🎁</div><div><h4>Donation desk</h4><p>Open at the hall entrance from 30 minutes before the show.</p></div></div>
+      </div>
+      <div class="section faq" style="margin-top:28px">
+        <h3 style="font-family:Fredoka;font-size:22px;margin-bottom:12px">FAQ</h3>
+        <details><summary>Do I need to pay for a ticket?</summary><p>No. All tickets are free. We kindly invite you to bring a donation instead.</p></details>
+        <details><summary>What can I donate?</summary><p>Books, clean clothes and school supplies in good condition.</p></details>
+        <details><summary>How do I show my ticket?</summary><p>Open "My Tickets" and show your e-ticket code at the entrance.</p></details>
+        <details><summary>Can parents and teachers come?</summary><p>Yes! Choose the "Family & Teachers" ticket type in the Ticketbox.</p></details>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 style="font-family:Fredoka;font-size:22px;margin-bottom:14px">Send us a message</h3>
+      <form id="cform">
+        <div class="two"><div class="field"><label>Your name</label><input required id="cname"></div><div class="field"><label>Class / role</label><input id="crole" placeholder="e.g. 10C8, parent"></div></div>
+        <div class="field"><label>Topic</label><select id="ctopic"><option>Tickets</option><option>Donations</option><option>Performing</option><option>Merchandise</option><option>Other</option></select></div>
+        <div class="field"><label>Message</label><textarea id="cmsg" rows="5" required></textarea></div>
+        <button class="btn primary" type="submit">Prepare message ✉️</button>
+      </form>
+      <div id="cout"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMIN -->
+<section class="view" id="admin">
+  <h2 class="title">🛠️ Admin Dashboard</h2>
+  <p class="sub">Manage users, tickets & seats, quiz results and the merchandise collection.</p>
+  <div class="adm-tabs" id="admTabs"></div>
+  <div id="admBody"></div>
+</section>
+</main>
+
+<footer>
+  <div class="foot">
+    <div>
+      <div class="school">
+        <div class="logo-wrap" id="logoWrap"><img id="logo" alt="Nguyen Van Linh High School logo" src="https://tracnghiem-anh.sgp1.digitaloceanspaces.com/DEMO/79/79000794/AFiles/TinTuc/logo6be2cd61-7f60-487b-84d0-ae8862d29a11.png"></div>
+        <div><h4>Nguyen Van Linh High School</h4><p>10C9 Music Concert</p></div>
+      </div>
+      <p style="margin-top:14px;opacity:.85;font-size:14px">📍 No.2, 3154 Pham The Hien Street, Binh Dong Ward, HCMC</p>
+    </div>
+    <div><h5>Explore</h5><ul>
+      <li><button data-go="home">Home</button></li><li><button data-go="ticketbox">Ticketbox</button></li><li><button data-go="performance">Performance</button></li><li><button data-go="museum">Musical Museum</button></li><li><button data-go="merch">Merchandise Collection</button></li><li><button data-go="contact">Contact</button></li></ul></div>
+    <div><h5>The cause</h5><ul><li>🎶 Music for Change</li><li>🎁 Free tickets, kind donations</li><li>📚 Books · clothes · school supplies</li><li>💛 Organised by Class 10C9</li></ul></div>
+  </div>
+  <div class="copy">© 2026 Music Concert of 10C9 · Nguyen Van Linh High School</div>
+</footer>
+
+<div class="modal" id="authModal"><div class="box auth"><button class="close" data-close>✕</button>
+  <div class="authtabs" id="authTabs"><button data-act="authmode" data-m="login">Log in</button><button data-act="authmode" data-m="signup">Sign up</button></div>
+  <form id="loginForm" data-mode="login">
+    <div class="field"><label>Username</label><input id="lUser" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <p class="err" id="lErr"></p><button class="btn primary full" type="submit">Log in</button>
+    <p class="hint">No account yet? <button type="button" data-act="authmode" data-m="signup" style="color:var(--pink);font-weight:800">Sign up</button></p>
+  </form>
+  <form id="signupForm" data-mode="signup">
+    <div class="field"><label>Full name *</label><input id="sName"></div>
+    <div class="field"><label>Class / role</label><input id="sCls" placeholder="e.g. 10C9, parent, teacher"></div>
+    <div class="field"><label>Username * <small style="font-weight:600;color:var(--ink2)">(3–20: a-z, 0-9, . _)</small></label><input id="sUser" autocomplete="username"></div>
+    <div class="two"><div class="field"><label>Password * <small style="font-weight:600;color:var(--ink2)">(min 6)</small></label><input id="sPass" type="password" autocomplete="new-password"></div><div class="field"><label>Confirm *</label><input id="sPass2" type="password" autocomplete="new-password"></div></div>
+    <p class="err" id="sErr"></p><button class="btn primary full" type="submit">Create account</button>
+  </form>
+  <form id="pwForm" data-mode="password">
+    <h3 style="font-family:Fredoka;margin-bottom:12px">🔑 Change password</h3>
+    <div class="field"><label>Current password</label><input id="pOld" type="password"></div>
+    <div class="two"><div class="field"><label>New password</label><input id="pNew" type="password"></div><div class="field"><label>Confirm</label><input id="pNew2" type="password"></div></div>
+    <p class="err" id="pErr"></p><button class="btn primary full" type="submit">Update password</button>
+  </form>
+</div></div>
+<div class="modal" id="tixModal"><div class="box"><button class="close" data-close>✕</button><h2 style="font-family:Fredoka;margin-bottom:16px">🎟️ My Tickets</h2><div id="tixList"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

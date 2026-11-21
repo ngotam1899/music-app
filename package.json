@@ -1,0 +1,21 @@
+{
+  "name": "music-concert-10c9",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Music Concert of 10C9 — Nguyen Van Linh High School (charity concert website)",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.6"
+  }
+}
