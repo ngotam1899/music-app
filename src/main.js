@@ -1,5 +1,6 @@
 import './styles.css';
 import { createStore } from './store/index.js';
+import qrcode from 'qrcode-generator';
 import { SEATS_PER_ROW, USERNAME_RE } from './config.js';
 
 /* ====== EDIT HERE: show date & time ====== */
@@ -252,9 +253,9 @@ async function book(){ const T=TYPES.find(t=>t.id===tb.type), E=evInfo();
     try{ tb.last=await store.book({ev:E.id,evTitle:E.t,evWhen:E.m,type:T.id,typeName:T.name,qty:tb.qty,seats:T.seated?[...tb.seats]:[],phone:tb.phone,pledge:tb.pledge.join(', ')}) }
     catch(err){ if(/seat/i.test(err.message)){ tb.seats=[]; tb.step=1 } else if(/left|sold/i.test(err.message)) tb.step=0; throw err }
     tb.step=3; confetti(); toast('🎉 Ticket reserved!'); renderAll() }) }
-function qr(code){ let h=2166136261; const bits=[]; for(let i=0;i<441;i++){ h^=code.charCodeAt(i%code.length)+i; h=Math.imul(h,16777619)>>>0; bits.push(h&1) } let s=''; const f=(x,y)=>(x<7&&y<7)||(x>13&&y<7)||(x<7&&y>13);
-  for(let y=0;y<21;y++)for(let x=0;x<21;x++){ let on; if(f(x,y)){ const cx=x>13?x-14:x, cy=y>13?y-14:y; on=(cx===0||cx===6||cy===0||cy===6)||(cx>1&&cx<5&&cy>1&&cy<5) } else on=bits[y*21+x]; if(on) s+=`<rect x="${x}" y="${y}" width="1" height="1"/>` }
-  return `<svg viewBox="-1 -1 23 23" width="130" height="130" fill="#2b2350" style="background:#fff">${s}</svg>` }
+// Real, scannable QR code (error correction level M) that encodes the ticket code, e.g. "10C9-AB12-XYZ"
+function qr(code){ const q=qrcode(0,'M'); q.addData(String(code)); q.make();
+  return `<div style="width:130px;height:130px;background:#fff" role="img" aria-label="QR code for ticket ${esc(code)}">${q.createSvgTag({cellSize:4,margin:2,scalable:true})}</div>` }
 const ST={active:'Active',checked:'Checked in',cancelled:'Cancelled'};
 function ticketHTML(t,withActions){ return `<div class="eticket" style="${t.status==='cancelled'?'opacity:.55':''}"><div class="l"><span class="chip">E-TICKET · FREE</span><h3>${esc(t.ev)}</h3><div class="kv"><div>Guest<b>${esc(t.name)}</b></div><div>Class / role<b>${esc(t.cls)||'—'}</b></div><div>When<b>${esc(t.when)}</b></div><div>Ticket<b>${esc(t.type)}</b></div><div>Seat(s)<b>${esc(t.seats)}</b></div><div>Qty<b>${t.qty}</b></div></div>${t.pledge?`<p style="margin-top:12px;font-size:13px">🎁 Pledge: ${esc(t.pledge)}</p>`:''}</div><div class="r">${qr(t.code)}<span>${t.code}</span><span class="status st-${t.status}">${ST[t.status]}</span>${withActions&&t.status==='active'?`<button class="btn danger xs" data-act="cancelmine" data-code="${t.code}" data-confirm="Tap again to cancel">Cancel ticket</button>`:''}</div></div>` }
 function openTix(){ if(!requireLogin(openTix,'Sign in to see your tickets')) return; const l=myTickets();
