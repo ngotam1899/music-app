@@ -64,6 +64,7 @@ export const localStore = {
   tickets: () => curRaw()?.role === 'admin' ? DB.tickets.map(mapTicket) : localStore.myTickets(),
   myTickets: () => { const u = curRaw(); return u ? DB.tickets.filter(t => t.u === u.u).map(mapTicket) : [] },
   quiz: () => curRaw()?.role === 'admin' ? DB.quiz.map(q => ({ ...q, uid: q.u })) : [],
+  myQuiz: () => { const u = curRaw(); return u ? DB.quiz.filter(q => q.u === u.u).map(q => ({ ...q, uid: q.u })) : [] },
   votes: id => DB.votes[id] || [],
   myWish: () => { const u = curRaw(); return u ? (DB.wish[u.u] || []) : [] },
   wishAll: () => curRaw()?.role === 'admin' ? DB.wish : {},

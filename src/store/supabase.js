@@ -12,7 +12,7 @@ export function createSupabaseStore(url, anonKey) {
   let S = emptyState();
 
   function emptyState() {
-    return { profile: null, users: [], inv: {}, avail: {}, merch: {}, votes: {}, myTickets: [], allTickets: [], quiz: [], myWish: [], wishAll: {} };
+    return { profile: null, users: [], inv: {}, avail: {}, merch: {}, votes: {}, myTickets: [], allTickets: [], quiz: [], myQuiz: [], myWish: [], wishAll: {} };
   }
   const mapProfile = p => ({ id: p.id, u: p.username, name: p.name, cls: p.cls, role: p.role, active: p.active, at: Date.parse(p.created_at) });
   const mapTicket = r => ({
@@ -20,6 +20,7 @@ export function createSupabaseStore(url, anonKey) {
     qty: r.qty, seatList: r.seats || [], seats: (r.seats || []).length ? r.seats.join(', ') : 'Standing',
     uid: r.user_id, u: r.username, name: r.name, cls: r.cls, phone: r.phone, pledge: r.pledge, status: r.status, at: Date.parse(r.created_at),
   });
+  const mapQuiz = q => ({ uid: q.user_id, u: q.username, name: q.name, cls: q.cls, score: q.score, total: q.total, answers: q.answers || [], at: Date.parse(q.created_at) });
   const isAdmin = () => S.profile?.role === 'admin' && S.profile?.active;
   const uid = () => S.profile?.id || fail('Please sign in first');
 
@@ -42,12 +43,14 @@ export function createSupabaseStore(url, anonKey) {
     if (session && (!p || !p.active)) { await sb.auth.signOut({ scope: 'local' }); S = next; if (p && !p.active) fail('This account is locked. Please contact the admin.'); return }
     if (p) {
       next.profile = mapProfile(p);
-      const [mine, wish] = await Promise.all([
+      const [mine, wish, myq] = await Promise.all([
         sb.from('tickets').select('*').eq('user_id', p.id).order('created_at', { ascending: false }),
         sb.from('wishlist').select('item').eq('user_id', p.id),
+        sb.from('quiz_attempts').select('*').eq('user_id', p.id).order('created_at', { ascending: false }),
       ]);
       next.myTickets = ok(mine).map(mapTicket);
       next.myWish = ok(wish).map(w => w.item);
+      next.myQuiz = ok(myq).map(mapQuiz);
       if (p.role === 'admin') {
         const [users, all, quiz, wishAll] = await Promise.all([
           sb.from('profiles').select('*').order('created_at'),
@@ -57,7 +60,7 @@ export function createSupabaseStore(url, anonKey) {
         ]);
         next.users = ok(users).map(mapProfile);
         next.allTickets = ok(all).map(mapTicket);
-        next.quiz = ok(quiz).map(q => ({ uid: q.user_id, u: q.username, name: q.name, cls: q.cls, score: q.score, total: q.total, answers: q.answers || [], at: Date.parse(q.created_at) }));
+        next.quiz = ok(quiz).map(mapQuiz);
         ok(wishAll).forEach(w => { (next.wishAll[w.user_id] ??= []).push(w.item) });
       } else next.users = [next.profile];
     }
@@ -93,6 +96,7 @@ export function createSupabaseStore(url, anonKey) {
     tickets: () => isAdmin() ? S.allTickets : S.myTickets,
     myTickets: () => S.myTickets,
     quiz: () => S.quiz,
+    myQuiz: () => S.myQuiz,
     votes: id => S.votes[id] || [],
     myWish: () => S.myWish,
     wishAll: () => S.wishAll,

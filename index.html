@@ -39,50 +39,65 @@
 <section class="view" id="home">
   <div class="hero" id="hero">
     <div class="slide s1 on">
-      <div><span class="chip">♪ CHARITY CONCERT · CLASS 10C9</span>
-      <h1>Music for Change</h1>
-      <p>Four groups, one stage, one cause. Join Class 10C9 for a night of songs that turn kindness into action.</p>
-      <button class="btn ghost" data-go="ticketbox">Get your free ticket →</button></div>
+      <div><span class="chip">♪ MINI CHARITY CONCERT · CLASS 10C9</span>
+      <h1>MUSIC FOR CHANGE</h1>
+      <p>Design with Science – Perform with Art – Give with Love. Your notebook is your ticket – and your English is your key.</p>
+      <button class="btn ghost" data-go="ticketbox">Get your ticket →</button></div>
       <svg class="art" viewBox="0 0 300 300"><circle cx="190" cy="150" r="110" fill="#fff" opacity=".18"/><circle cx="190" cy="150" r="70" fill="#fff" opacity=".2"/><g fill="#fff"><rect x="120" y="70" width="14" height="140" rx="7"/><ellipse cx="112" cy="212" rx="28" ry="20"/><rect x="230" y="50" width="14" height="140" rx="7"/><ellipse cx="222" cy="192" rx="28" ry="20"/><path d="M127 70 L244 50 L244 80 L127 100Z"/></g></svg>
     </div>
     <div class="slide s2">
-      <div><span class="chip">🎤 THE LINE-UP</span>
-      <h1>4 groups. 1 big night.</h1>
-      <p>Acoustic pop, Vietnamese folk remix, a live band and a choir — all performed by 10C9 students.</p>
-      <button class="btn ghost" data-go="performance">Meet the performers →</button></div>
+      <div><span class="chip">🎤 4 GROUPS · 1 CONCERT</span>
+      <h1>One notebook, one smile</h1>
+      <p>Ticket &amp; Media · Pop Band · Sound Makers · Digital Stage — everything on stage is designed, tested and improved by 10C9.</p>
+      <button class="btn ghost" data-go="performance">Meet the groups →</button></div>
       <svg class="art" viewBox="0 0 300 300"><g fill="#fff" opacity=".9"><rect x="140" y="40" width="60" height="110" rx="30"/><rect x="164" y="150" width="12" height="80"/><rect x="130" y="228" width="80" height="12" rx="6"/></g><path d="M120 110a50 50 0 0 0 100 0" stroke="#fff" stroke-width="10" fill="none" opacity=".9"/><circle cx="70" cy="80" r="16" fill="#ffc93c"/><circle cx="250" cy="230" r="12" fill="#2ec4a6"/></svg>
     </div>
     <div class="slide s3">
-      <div><span class="chip">🎻 MUSICAL MUSEUM</span>
-      <h1>Explore, play, discover</h1>
-      <p>Walk through music history, hear Vietnamese traditional instruments and play our mini piano.</p>
-      <button class="btn ghost" data-go="museum">Enter the museum →</button></div>
+      <div><span class="chip">🎸 BACKSTAGE TOUR</span>
+      <h1>Play, measure, discover</h1>
+      <p>Try our recycled guitar, ukulele and drum in the Instrument Museum, then make the Beat Light flash in the Digital Stage Lab.</p>
+      <button class="btn ghost" data-go="museum">Start the tour →</button></div>
       <svg class="art" viewBox="0 0 300 300"><g fill="#fff" opacity=".85"><path d="M60 230 L150 70 L240 230Z" opacity=".25"/><rect x="80" y="130" width="140" height="100" rx="10" opacity=".35"/></g><g fill="#fff"><rect x="95" y="150" width="16" height="70" rx="3"/><rect x="125" y="150" width="16" height="70" rx="3"/><rect x="155" y="150" width="16" height="70" rx="3"/><rect x="185" y="150" width="16" height="70" rx="3"/></g></svg>
     </div>
     <div class="dots" id="dots"></div>
   </div>
 
   <div class="countdown" id="countdown">
-    <div class="cd-label"><h3 id="evDate">Show night</h3><p>School Hall · Nguyen Van Linh High School</p></div>
+    <div class="cd-label"><h3 id="evDate">Show time</h3><p>School Hall · Check-in from 13:15</p></div>
     <div class="cd-box" style="--c:var(--pink)"><b id="cdD">0</b><span>Days</span></div>
     <div class="cd-box" style="--c:var(--sun)"><b id="cdH">0</b><span>Hours</span></div>
     <div class="cd-box" style="--c:var(--mint)"><b id="cdM">0</b><span>Minutes</span></div>
     <div class="cd-box" style="--c:var(--sky)"><b id="cdS">0</b><span>Seconds</span></div>
   </div>
 
+  <div class="section" style="margin-top:8px">
+    <div class="section-head"><h3>📚 Notebook <span class="squiggle">counter</span></h3><small style="color:var(--ink2)">Standard = 1 notebook · VIP = 3 notebooks · counted publicly, handed over through the school Youth Union</small></div>
+    <div class="kpis" id="nbCounter"></div>
+  </div>
+
   <div class="section">
-    <div class="section-head"><h3>✨ Featured <span class="squiggle">events</span></h3></div>
+    <div class="section-head"><h3>✨ Concert <span class="squiggle">highlights</span></h3></div>
     <div class="cats" id="cats"></div>
     <div class="grid" id="events"></div>
   </div>
 
   <div class="section">
-    <div class="section-head"><h3>💛 Why we sing</h3></div>
+    <div class="section-head"><h3>💛 A STEAM concert in four parts</h3></div>
     <div class="mission">
-      <div class="mbox" style="--bgc:#ffe3ec"><div class="ic">🎶</div><h4>Learn through music</h4><p>A STEAM project from English 10 – Unit 3: Music. Students plan, rehearse and run a real concert in English.</p></div>
-      <div class="mbox" style="--bgc:#e0f3ff"><div class="ic">🤝</div><h4>Raise awareness</h4><p>Every song carries a message about kindness, community and helping people in need.</p></div>
-      <div class="mbox" style="--bgc:#dcfbf2"><div class="ic">🎁</div><h4>Give, don't pay</h4><p>Tickets are free. Instead of paying, guests are invited to donate books, clothes or school supplies.</p></div>
-      <div class="mbox" style="--bgc:#fff1c9"><div class="ic">🌱</div><h4>Teamwork</h4><p>Four student groups share the jobs: performing, staging, media and the donation desk.</p></div>
+      <div class="mbox" style="--bgc:#ffe3ec"><div class="ic">🎫</div><h4>1 · Ticket &amp; Media</h4><p>Online tickets, QR check-in, seat map and a transparent notebook count. <b>Math:</b> sets and propositions.</p></div>
+      <div class="mbox" style="--bgc:#e0f3ff"><div class="ic">🎤</div><h4>2 · Pop Band</h4><p>The mashup, Sing &amp; Fill and the Sound Check. <b>Physics:</b> experiments and averages (dB).</p></div>
+      <div class="mbox" style="--bgc:#dcfbf2"><div class="ic">🎸</div><h4>3 · Sound Makers</h4><p>Recycled guitar, ukulele and drum. <b>Physics:</b> safety and measurement error.</p></div>
+      <div class="mbox" style="--bgc:#fff1c9"><div class="ic">💡</div><h4>4 · Digital Stage</h4><p>Stage screen, website, QR codes, light sticks and the Beat Light. <b>IT:</b> information processing.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h3>🌟 Special guests</h3></div>
+    <div class="mission">
+      <div class="mbox" style="--bgc:#f1ebff"><div class="ic">🎓</div><h4>Mr Tran Quang</h4><p>Vice Principal</p></div>
+      <div class="mbox" style="--bgc:#ffe9de"><div class="ic">🏫</div><h4>Ms Nguyen Thi Khanh Ngan</h4><p>Homeroom teacher, 10C9</p></div>
+      <div class="mbox" style="--bgc:#e0f3ff"><div class="ic">📖</div><h4>Ms Ngo Thi Thanh Diep</h4><p>English teacher, 10C9</p></div>
+      <div class="mbox" style="--bgc:#dcfbf2"><div class="ic">🌏</div><h4>Mr Ralph</h4><p>Native English teacher</p></div>
     </div>
   </div>
 </section>
@@ -90,7 +105,7 @@
 <!-- TICKETBOX -->
 <section class="view" id="ticketbox">
   <h2 class="title">🎫 Ticketbox</h2>
-  <p class="sub">Reserve your seat in four quick steps. <b>All tickets are free</b> — this is a charity concert, so we ask for a donation pledge instead of money.</p>
+  <p class="sub">“Today, your notebook is your ticket.” No money — choose your ticket by notebooks: <b>Standard = 1 notebook</b>, <b>VIP = 3 notebooks</b>. Bring them to the check-in desk with your QR code.</p>
   <div class="tb">
     <div class="panel">
       <div class="steps" id="steps">
@@ -106,11 +121,15 @@
 <!-- PERFORMANCE -->
 <section class="view" id="performance">
   <h2 class="title">🎤 Performance</h2>
-  <p class="sub">Meet the four groups of Class 10C9. Tap the heart to vote for your favourite act — like the voting on a real ticket site.</p>
+  <p class="sub">Four groups, four parts of one concert. Tap the heart to vote for your favourite group.</p>
   <div class="cats" id="genres"></div>
   <div class="lineup" id="lineup"></div>
   <div class="section">
-    <div class="section-head"><h3>🕖 Show running order</h3></div>
+    <div class="section-head"><h3>🎶 Sing &amp; Fill <span class="squiggle">(Sticker 2)</span></h3><small style="color:var(--ink2)">Listen to the band and fill in 6 words · 4/6 or more = Sticker 2</small></div>
+    <div class="panel" id="singfill"></div>
+  </div>
+  <div class="section">
+    <div class="section-head"><h3>🕜 Programme · Mon 23 Nov 2026</h3></div>
     <div class="timeline" id="runorder"></div>
   </div>
 </section>
@@ -118,36 +137,40 @@
 <!-- MUSEUM -->
 <section class="view" id="museum">
   <h2 class="title">🎻 Musical Museum</h2>
-  <p class="sub">A small interactive exhibition prepared by 10C9. Walk through the eras, listen to the instruments, then test yourself.</p>
+  <p class="sub">Backstage Tour: Zone A – Instrument Museum (Group 3) and Zone B – Digital Stage Lab (Group 4). Collect your stickers, then check your Concert Passport.</p>
   <div class="halls" id="halls">
-    <button class="cat on" data-hall="h-time">🕰️ Hall 1 · Time Tunnel</button>
-    <button class="cat" data-hall="h-inst">🪕 Hall 2 · Instruments</button>
-    <button class="cat" data-hall="h-piano">🎹 Hall 3 · Play Room</button>
-    <button class="cat" data-hall="h-quiz">❓ Hall 4 · Music Quiz</button>
+    <button class="cat on" data-hall="h-inst">🎸 Zone A · Instrument Museum</button>
+    <button class="cat" data-hall="h-quiz">❓ Physics Quiz</button>
+    <button class="cat" data-hall="h-lab">💡 Zone B · Digital Stage Lab</button>
+    <button class="cat" data-hall="h-pass">🏅 My Concert Passport</button>
   </div>
-  <div id="h-time" class="hall">
-    <div class="era-track" id="eras"></div>
-    <p style="color:var(--ink2);font-size:13.5px">← Swipe or scroll sideways to travel through time →</p>
-  </div>
-  <div id="h-inst" class="hall" hidden><div class="inst-grid" id="insts"></div></div>
-  <div id="h-piano" class="hall" hidden>
-    <div class="piano-wrap">
-      <h3 style="font-family:Fredoka">🎹 Mini piano</h3>
-      <p style="opacity:.8;font-size:14px">Click the keys, or use your keyboard: A S D F G H J K (white) · W E T Y U (black). Try "Twinkle": A A G G H H G</p>
-      <div class="piano" id="piano"></div>
-    </div>
-  </div>
+  <div id="h-inst" class="hall"><div class="inst-grid" id="insts"></div></div>
   <div id="h-quiz" class="hall" hidden><div class="panel" id="quiz"></div></div>
+  <div id="h-lab" class="hall" hidden>
+    <div class="piano-wrap">
+      <h3 style="font-family:Fredoka">💡 Beat Light</h3>
+      <p style="opacity:.85;font-size:14px">Clap your hands or hit the drum! The light only turns on when the sound is loud enough — like our real Beat Light next to the stage.</p>
+      <div class="beat"><div class="bulb" id="bulb"></div>
+        <div class="ipo"><div id="ipoIn"><b>INPUT</b><span>Microphone takes in the sound</span></div><div id="ipoPr"><b>PROCESSING</b><span>Circuit checks: is it loud enough?</span></div><div id="ipoOut"><b>OUTPUT</b><span>The light turns on</span></div></div>
+      </div>
+      <div class="levelbar"><i id="lvl"></i><s id="thr"></s></div>
+      <div class="beat-ctrl"><button class="btn primary" id="micBtn">🎤 Use microphone</button><button class="btn ghost" id="clapBtn" style="color:var(--ink)">👏 Tap to clap</button>
+        <label>Sensitivity <input type="range" id="sens" min="20" max="95" value="65"></label><span id="lvlTxt">—</span></div>
+    </div>
+    <div class="panel" id="labQuiz" style="margin-top:18px"></div>
+  </div>
+  <div id="h-pass" class="hall" hidden><div class="panel" id="passport"></div></div>
 </section>
 
 <!-- MERCH -->
 <section class="view" id="merch">
   <h2 class="title">🛍️ Merchandise Collection</h2>
-  <p class="sub">Handmade by 10C9. <b>Not for sale</b> — every item is a thank-you gift for guests who bring a donation on show night.</p>
+  <p class="sub">Your concert kit — <b>not for sale</b>. You receive it at the check-in desk. Light sticks are borrowed: please return them after the show.</p>
   <div class="how">
-    <div><b>1</b><p>Pick the gifts you like and add them to your wishlist.</p></div>
-    <div><b>2</b><p>Bring books, clothes or school supplies to the donation desk.</p></div>
-    <div><b>3</b><p>Show your wishlist and receive a gift while stocks last.</p></div>
+    <div><b>1</b><p>Bring your notebook(s): Standard 1, VIP 3.</p></div>
+    <div><b>2</b><p>Show your QR code at the check-in desk (13:15–13:30).</p></div>
+    <div><b>3</b><p>Get your passport, light stick and Sticker 1. VIP guests also get a bottle of water.</p></div>
+    <div><b>4</b><p>After 15:00, return your light stick. Used batteries are collected separately.</p></div>
   </div>
   <div class="cats" id="mcats"></div>
   <div class="merch-grid" id="mgrid"></div>
@@ -156,27 +179,29 @@
 <!-- CONTACT -->
 <section class="view" id="contact">
   <h2 class="title">💌 Contact</h2>
-  <p class="sub">Questions about tickets, donations or performing? Reach the 10C9 organising team.</p>
+  <p class="sub">Questions about tickets, notebooks or the passport? Reach the 10C9 organising team.</p>
   <div class="contact">
     <div>
       <div class="info-list">
-        <div class="info"><div class="ic" style="--bgc:#ffe3ec">📍</div><div><h4>Venue</h4><p>Nguyen Van Linh High School<br>No.2, 3154 Pham The Hien Street, Binh Dong Ward, HCMC</p></div></div>
-        <div class="info"><div class="ic" style="--bgc:#e0f3ff">🏫</div><div><h4>Organiser</h4><p>Class 10C9 — Music Concert team</p></div></div>
-        <div class="info"><div class="ic" style="--bgc:#dcfbf2">🎁</div><div><h4>Donation desk</h4><p>Open at the hall entrance from 30 minutes before the show.</p></div></div>
+        <div class="info"><div class="ic" style="--bgc:#ffe3ec">📍</div><div><h4>Venue &amp; time</h4><p>School Hall, Nguyen Van Linh High School<br>No.2, 3154 Pham The Hien Street, Binh Dong Ward, HCMC<br><b>Mon 23 Nov 2026 · 13:30–15:00</b> (check-in 13:15)</p></div></div>
+        <div class="info"><div class="ic" style="--bgc:#e0f3ff">🏫</div><div><h4>Organiser</h4><p>Class 10C9 — 48 students in 4 groups<br>Teacher in charge: Ms Ngo Thi Thanh Diep (English)</p></div></div>
+        <div class="info"><div class="ic" style="--bgc:#dcfbf2">📚</div><div><h4>Check-in desks</h4><p>3 desks: Standard · VIP · Guests. Scan your QR, hand in your notebook(s), get your passport and light stick.</p></div></div>
       </div>
       <div class="section faq" style="margin-top:28px">
         <h3 style="font-family:Fredoka;font-size:22px;margin-bottom:12px">FAQ</h3>
-        <details><summary>Do I need to pay for a ticket?</summary><p>No. All tickets are free. We kindly invite you to bring a donation instead.</p></details>
-        <details><summary>What can I donate?</summary><p>Books, clean clothes and school supplies in good condition.</p></details>
-        <details><summary>How do I show my ticket?</summary><p>Open "My Tickets" and show your e-ticket code at the entrance.</p></details>
-        <details><summary>Can parents and teachers come?</summary><p>Yes! Choose the "Family & Teachers" ticket type in the Ticketbox.</p></details>
+        <details><summary>Do I need to pay?</summary><p>No. Tickets are free — you choose them by notebooks: Standard = 1 notebook, VIP = 3 notebooks.</p></details>
+        <details><summary>What does VIP get?</summary><p>Front rows (after our guests), a bottle of water, a 10C9 buddy guide and the first turn on the Backstage Tour. Standard guests still join every activity and can complete the whole passport.</p></details>
+        <details><summary>Where do the notebooks go?</summary><p>All notebooks are counted publicly and handed to students in need through the school Youth Union, with a record signed by 3 people. Names and the number of notebooks of each person are not published.</p></details>
+        <details><summary>I forgot my notebook!</summary><p>Please tell the check-in desk — you can bring it later through your class monitor.</p></details>
+        <details><summary>How do I complete the passport?</summary><p>Collect 6 stickers: Check-in, Sing &amp; Fill, Photo, Try &amp; Answer, Physics Quiz and Digital Stage Lab. 6/6 = COMPLETED. ★ Bonus (ask the band a question in English) is optional.</p></details>
+        <details><summary>Photos</summary><p>When you book, you choose whether we may take your photo. If you say no, you get a red dot on your passport and we will not use your photo.</p></details>
       </div>
     </div>
     <div class="panel">
       <h3 style="font-family:Fredoka;font-size:22px;margin-bottom:14px">Send us a message</h3>
       <form id="cform">
-        <div class="two"><div class="field"><label>Your name</label><input required id="cname"></div><div class="field"><label>Class / role</label><input id="crole" placeholder="e.g. 10C8, parent"></div></div>
-        <div class="field"><label>Topic</label><select id="ctopic"><option>Tickets</option><option>Donations</option><option>Performing</option><option>Merchandise</option><option>Other</option></select></div>
+        <div class="two"><div class="field"><label>Your name</label><input required id="cname"></div><div class="field"><label>Class / role</label><input id="crole" placeholder="e.g. 10C8, teacher"></div></div>
+        <div class="field"><label>Topic</label><select id="ctopic"><option>Tickets</option><option>Notebooks</option><option>Passport &amp; stickers</option><option>Photos</option><option>Other</option></select></div>
         <div class="field"><label>Message</label><textarea id="cmsg" rows="5" required></textarea></div>
         <button class="btn primary" type="submit">Prepare message ✉️</button>
       </form>
@@ -188,7 +213,7 @@
 <!-- ADMIN -->
 <section class="view" id="admin">
   <h2 class="title">🛠️ Admin Dashboard</h2>
-  <p class="sub">Manage users, tickets & seats, quiz results and the merchandise collection.</p>
+  <p class="sub">Check-in scanner, tickets &amp; seats, notebook count, passports, quiz results and the concert kit.</p>
   <div class="adm-tabs" id="admTabs"></div>
   <div id="admBody"></div>
 </section>
@@ -205,7 +230,7 @@
     </div>
     <div><h5>Explore</h5><ul>
       <li><button data-go="home">Home</button></li><li><button data-go="ticketbox">Ticketbox</button></li><li><button data-go="performance">Performance</button></li><li><button data-go="museum">Musical Museum</button></li><li><button data-go="merch">Merchandise Collection</button></li><li><button data-go="contact">Contact</button></li></ul></div>
-    <div><h5>The cause</h5><ul><li>🎶 Music for Change</li><li>🎁 Free tickets, kind donations</li><li>📚 Books · clothes · school supplies</li><li>💛 Organised by Class 10C9</li></ul></div>
+    <div><h5>The cause</h5><ul><li>🎶 Music for Change</li><li>📚 Your notebook is your ticket</li><li>🎫 Standard 1 notebook · VIP 3 notebooks</li><li>💛 Organised by Class 10C9</li></ul></div>
   </div>
   <div class="copy">© 2026 Music Concert of 10C9 · Nguyen Van Linh High School</div>
 </footer>
