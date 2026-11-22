@@ -39,7 +39,7 @@ export function createSupabaseStore(url, anonKey) {
     ok(merch).forEach(m => { next.merch[m.item] = { stock: m.stock, given: m.given } });
     ok(votes).forEach(v => { (next.votes[v.act_id] ??= []).push(v.user_id) });
     const p = ok(prof);
-    if (session && (!p || !p.active)) { await sb.auth.signOut(); S = next; if (p && !p.active) fail('This account is locked. Please contact the admin.'); return }
+    if (session && (!p || !p.active)) { await sb.auth.signOut({ scope: 'local' }); S = next; if (p && !p.active) fail('This account is locked. Please contact the admin.'); return }
     if (p) {
       next.profile = mapProfile(p);
       const [mine, wish] = await Promise.all([
@@ -108,7 +108,9 @@ export function createSupabaseStore(url, anonKey) {
       await api('/api/signup', { username: u, password: pw, name, cls });
       return store.login(u, pw);
     },
-    async logout() { await sb.auth.signOut(); await load() },
+    // 'local' = sign out only this browser; other devices stay signed in.
+    // (supabase-js defaults to 'global', which revokes the user's sessions on every device.)
+    async logout() { await sb.auth.signOut({ scope: 'local' }); await load() },
     async changePassword(oldPw, newPw) {
       const me = S.profile || fail('Please sign in first');
       const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(me.u), password: oldPw });

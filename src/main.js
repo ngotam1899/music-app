@@ -1,5 +1,5 @@
 import './styles.css';
-import { createStore } from './store/index.js';
+import { createStore, NOT_CONFIGURED_MESSAGE } from './store/index.js';
 import qrcode from 'qrcode-generator';
 import { SEATS_PER_ROW, USERNAME_RE } from './config.js';
 
@@ -399,6 +399,9 @@ function renderAll(){ renderHeader(); renderEvents(); renderTB(); renderPerf(); 
 (async()=>{
   try{ store=await createStore(); await store.init() }
   catch(err){ console.error(err); toast(err.message||'Could not load data') }
+  if(store?.mode==='unconfigured'){ const bar=document.createElement('div'); bar.setAttribute('role','alert');
+    bar.style.cssText='background:#2b2350;color:#ffc93c;text-align:center;padding:10px 16px;font-weight:700;font-size:14px';
+    bar.textContent='⚠️ '+NOT_CONFIGURED_MESSAGE; document.body.prepend(bar) }
   renderQuiz(); renderAll(); go(location.hash.slice(1)||'home');
   // keep numbers fresh when the tab is shown again (e.g. admin dashboard on the entrance laptop)
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&store&&!busy) store.refresh().then(renderAll).catch(()=>{}) });
