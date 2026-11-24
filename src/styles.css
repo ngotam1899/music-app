@@ -393,3 +393,29 @@ footer:before{content:"";position:absolute;left:0;right:0;top:-24px;height:26px;
 .thumb button{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#000a;color:#fff;font-size:12px;line-height:22px}
 .drop{border:2px dashed var(--lilac);border-radius:14px;padding:14px;text-align:center;color:var(--lilac);font-weight:800;cursor:pointer;background:#faf8ff}
 .drop:hover{background:#f1ebff}
+
+/* ===== Concert Passport ===== */
+.cp-nav{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+.cp-nav a{text-decoration:none}
+.cp-part{margin-bottom:22px;scroll-margin-top:150px}
+.cp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.cp-head h3{font-family:Fredoka;font-size:22px;color:#1d4fa3}
+.cp-head h3 small{font-size:14px;color:var(--ink2);font-weight:600}
+.cp-badge{background:#fff3d6;border:2px solid #ffd27a;color:#9a5b00;border-radius:999px;padding:4px 12px;font-weight:800;font-size:13px;white-space:nowrap}
+.cp-task{color:var(--ink2);margin-bottom:12px}
+table.match{width:100%;border-collapse:collapse;font-size:15px}
+table.match th{background:#1d4fa3;color:#fff;text-align:left;padding:8px 10px}
+table.match td{border:1px solid #dfe6f5;padding:8px 10px;vertical-align:middle}
+table.match select{padding:6px 8px;border-radius:8px;border:2px solid var(--line);font-weight:700}
+.mark{font-weight:800;margin-left:6px}.mark.ok{color:#13866f}.mark.no{color:#d6285a}
+.cpq{margin:12px 0}
+.cpq p{font-weight:700;margin-bottom:6px}
+.cpq .pledges button{min-width:90px}
+.cpq.ok .pledge.on{border-color:var(--mint);background:#e6faf5}
+.cpq.no .pledge.on{border-color:var(--pink);background:#fff0f4}
+.station{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;border-left:6px solid var(--sc)}
+.station h4{font-family:Fredoka;font-size:19px;color:var(--sc)}
+.cp-saved{font-size:13px;font-weight:800;color:#13866f}
+.cp-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.order{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.order select{padding:6px 10px;border-radius:8px;border:2px solid var(--line);font-weight:800}

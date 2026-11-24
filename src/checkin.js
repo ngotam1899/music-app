@@ -5,17 +5,17 @@
 const CODE_RE = /10C9-[A-Z0-9]{4}-[A-Z0-9]{3}/i;
 export const findCode = text => (String(text || '').match(CODE_RE)?.[0] || '').toUpperCase();
 
-/* ---------- Concert Passport: 6 required stickers ---------- */
-// attempts: the user's saved activity results (kind is told apart by `total`)
-export function stickersFor(tickets, attempts) {
-  const has = (total, min) => attempts.some(a => a.total === total && a.score >= min);
+/* ---------- Concert Passport: 6 required stickers (from the paper passport) ---------- */
+// rows: the user's saved passport parts { part, score, total }
+export function stickersFor(tickets, rows) {
+  const sc = part => rows.find(r => r.part === part)?.score ?? -1;
   const list = [
     { n: 1, label: 'Check-in', how: 'Show your QR and hand in your notebook(s)', got: tickets.some(t => t.status === 'checked') },
-    { n: 2, label: 'Sing & Fill', how: '4/6 words or more', got: has(6, 4) },
-    { n: 3, label: 'Photo', how: 'Photo with an instrument (Zone A)', got: has(2, 1) },
-    { n: 4, label: 'Try & Answer', how: 'Play an instrument and answer', got: has(1, 1) },
-    { n: 5, label: 'Physics Quiz', how: '2/3 or more', got: has(3, 2) },
-    { n: 6, label: 'Digital Stage Lab', how: '3/4 or more', got: has(4, 3) },
+    { n: 2, label: 'Sing & Fill', how: 'Part 2 · 4/6 or more', got: sc('p2') >= 4 },
+    { n: 3, label: 'Museum', how: 'Part 3 · 2/3 or more', got: sc('p3') >= 2 },
+    { n: 4, label: 'Station A', how: 'Part 4 · both answers correct', got: sc('p4a') >= 2 },
+    { n: 5, label: 'Station B', how: 'Part 4 · both answers correct', got: sc('p4b') >= 2 },
+    { n: 6, label: 'Station C', how: 'Part 4 · both answers correct', got: sc('p4c') >= 2 },
   ];
   const count = list.filter(s => s.got).length;
   return { list, count, completed: count === 6 };

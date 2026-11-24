@@ -66,7 +66,7 @@ const QUIZ=[
 ];
 // Sing & Fill — our own lyrics "Music for Change" (Sticker 2 – 4/6 or more)
 const WORDS=['notebook','sing','sound','gifts','audience','volunteer','listen','talented'];
-const LYRICS=['We bring a {0} and we bring a smile,','We {1} together, stay a little while.','Guitars and drums make a happy {2},','Wave your light stick, pass the love around!','Music for change, music for you,','Small {3} can make a dream come true.','Sing it out loud, let the {4} hear:','We {5} to help – we\'re glad you\'re here!'];
+const LYRICS=['We bring a {0} and we bring a smile,','We {1} together, stay a little while.','Guitars and shakers make a happy {2},','Wave your light stick, pass the love around!','Music for change, music for you,','Small {3} can make a dream come true.','Sing it out loud, let the {4} hear:','We {5} to help – we\'re glad you\'re here!'];
 // Digital Stage Lab (Sticker 6 – 3/4 or more)
 const LAB=[['Input (đầu vào)',['sound','light'],0],['Processing (xử lí)',['the circuit','the plastic tube'],0],['Output (kết quả)',['the light turns on','the drum plays'],0],['Is the Beat Light a smart device?',['Yes','No – it does not connect to other devices'],1]];
 // Attempt kinds are told apart by their total (stored in quiz_attempts)
@@ -130,11 +130,11 @@ function renderHeader(){ const u=me();
   $('#adminTab').hidden=!isAdmin() }
 
 /* ====== ROUTER & CLICK DELEGATION ====== */
-const VIEWS=['home','ticketbox','performance','museum','merch','contact','admin'];
+const VIEWS=['home','ticketbox','performance','museum','cpass','merch','contact','admin'];
 function go(v){ if(!VIEWS.includes(v)) v='home';
   if(v==='admin'&&!isAdmin()){ if(!me()) openAuth('login',()=>isAdmin()&&go('admin')); else toast('Admins only'); v='home' }
   $$('.view').forEach(x=>x.classList.toggle('active',x.id===v)); $$('#nav .tab').forEach(t=>t.classList.toggle('active',t.dataset.go===v));
-  if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); if(v!=='admin'&&adm.scanning){ stopScanner(); adm.scanning=false } if(v!=='museum') stopMic(); if(v==='admin') renderAdmin(); if(v==='performance') loadVlog(); window.scrollTo({top:0,behavior:'smooth'}) }
+  if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); if(v!=='admin'&&adm.scanning){ stopScanner(); adm.scanning=false } if(v!=='museum') stopMic(); if(v==='admin') renderAdmin(); if(v==='performance') loadVlog(); if(v==='cpass') renderCP(); window.scrollTo({top:0,behavior:'smooth'}) }
 addEventListener('hashchange',()=>go(location.hash.slice(1)));
 
 document.addEventListener('click',e=>{
@@ -191,6 +191,15 @@ const ACT={
   scanToggle:()=>{ adm.scanErr=''; if(adm.scanning){ stopScanner(); adm.scanning=false } else adm.scanning=true; renderAdmin() },
   vlogReload:()=>loadVlog(),
   mImgDel:d=>run(async()=>{ const cur=[...(merchInv(d.n).images||[])], removed=cur.splice(+d.i,1); await store.setMerchImages(d.n,{keep:cur,files:[],removed}); toast('Photo removed'); renderAll() }),
+  cpJump:d=>document.getElementById(d.to)?.scrollIntoView({behavior:'smooth',block:'start'}),
+  cpPick:d=>{ const st=stState(d.part); st.picks[+d.q]=+d.o; cpChecked[d.part]=false; d.part==='p3'?renderP3():renderP4() },
+  cpTried:d=>{ stState(d.part).tried=d.t; renderP4() },
+  cpSubmit:async d=>{ let a,sc,tot; try{ [a,sc,tot]=scorePart(d.part) }catch(e){ return toast(e.message) }
+    cpChecked[d.part]=true; renderCP();
+    const S=STATIONS.find(x=>x.part===d.part), need={p3:2}[d.part]??(S?2:null);
+    if(sc!=null) toast(`${PART_LABEL[d.part]}: ${sc}/${tot}${need!=null?(sc>=need?' — sticker earned! 🏷️':' — try again to earn the sticker'):''}`);
+    if((need!=null&&sc>=need)||(d.part==='p1'&&sc===8)) confetti();
+    await savePart(d.part,a,sc,tot,PART_LABEL[d.part]) },
   scanNext:()=>{ adm.code=''; renderAdmin() },
   doCheckin:d=>run(async()=>{ await store.setTicketStatus(d.code,'checked'); confetti(); toast('✅ Checked in — give the passport, light stick and Sticker 1'); renderAll() }),
   resetdemo:()=>run(async()=>{ await store.resetEvent(); toast('All event data reset (admin accounts kept)'); renderAll() })
@@ -366,18 +375,17 @@ function renderVlog(){ renderComposer(); const box=$('#vlogFeed'); if(!box) retu
 /* Sing & Fill */
 let sfDone=null;
 function renderSingFill(){ const box=$('#singfill'); if(!box) return;
-  const bank=[...WORDS].sort();
-  box.innerHTML=`<p style="color:var(--ink2);font-size:14px">Our own song <b>“Music for Change”</b>. Scan the QR on the screen or play here: listen, fill in the 6 words, then press Submit.</p>
-   <div class="lyrics">${LYRICS.map(l=>l.replace(/\{(\d)\}/,(m,i)=>`<input data-blank="${i}" autocomplete="off" aria-label="Blank ${+i+1}" placeholder="(${+i+1})">`)).join('<br>')}</div>
-   <div><b style="font-size:14px">Word bank:</b><div class="wordbank">${bank.map(w=>`<button data-word="${w}">${w}</button>`).join('')}</div></div>
-   <div class="actions"><span id="sfMsg" style="font-weight:800"></span><div style="display:flex;gap:10px"><button class="btn ghost" id="sfReset">Clear</button><button class="btn primary" id="sfSubmit">Submit ✓</button></div></div>`;
+  const bank=[...WORDS].sort(), prev=myPart('p2')?.answers?.words||[];
+  box.innerHTML=`<div class="lyrics">${LYRICS.map(l=>l.replace(/\{(\d)\}/,(m,i)=>`<b>(${+i+1})</b> <input data-blank="${i}" autocomplete="off" aria-label="Blank ${+i+1}" value="${esc(prev[i]||'')}">`)).join('<br>')}</div>
+   <div><b style="font-size:14px">WORD BANK:</b><div class="wordbank">${bank.map(w=>`<button data-word="${w}">${w}</button>`).join('')}</div></div>
+   <div class="actions"><span><span id="sfMsg" style="font-weight:800"></span> ${savedLine('p2')}</span><div style="display:flex;gap:10px"><button class="btn ghost" id="sfReset">Clear</button><button class="btn primary" id="sfSubmit">Submit ✓</button></div></div>`;
   let focus=null; $$('#singfill input').forEach(i=>i.onfocus=()=>focus=i);
   $$('#singfill [data-word]').forEach(b=>b.onclick=()=>{ const t=focus&&!focus.value?focus:[...$$('#singfill input')].find(i=>!i.value); if(t){ t.value=b.dataset.word; const nx=[...$$('#singfill input')].find(i=>!i.value); (nx||t).focus() } });
   $('#sfReset').onclick=()=>renderSingFill();
   $('#sfSubmit').onclick=async()=>{ const ins=[...$$('#singfill input')]; const answers=ins.map(i=>WORDS.indexOf(i.value.trim().toLowerCase()));
     let score=0; ins.forEach((inp,k)=>{ const ok=answers[k]===k; if(ok) score++; inp.classList.toggle('ok',ok); inp.classList.toggle('no',!ok) });
     const pass=score>=4; $('#sfMsg').textContent=`Your score: ${score}/6 ${pass?'— Sticker 2 ✓':'— try again (4/6 needed)'}`; if(pass) confetti();
-    await saveActivity({score,total:6,answers},'Sing & Fill') } }
+    await savePart('p2',{words:ins.map(i=>i.value.trim().toLowerCase())},score,6,'Part 2 · Sing & Fill') } }
 
 // Saves an activity result (needs sign-in so it counts on your passport)
 async function saveActivity(r,label){ if(!me()){ openAuth('login',async()=>{ if(await saveQuiz(r)){ toast(`✅ ${label} result saved to your passport`); renderPassport() } }); toast('Log in to save it to your passport'); return false }
@@ -435,11 +443,80 @@ renderLabQuiz();
 /* Concert Passport */
 function renderPassport(){ const box=$('#passport'); if(!box) return; const u=me();
   if(!u){ box.innerHTML=`<div class="empty"><div style="font-size:52px">🏅</div><h3 style="font-family:Fredoka">Concert Passport</h3><p>Log in to see your stickers: Check-in, Sing &amp; Fill, Photo, Try &amp; Answer, Physics Quiz and Digital Stage Lab.</p><button class="btn primary" style="margin-top:12px" data-act="login">Log in</button></div>`; return }
-  const P=stickersFor(store.myTickets().filter(t=>t.evId==='main'),store.myQuiz()), tk=store.myTickets().find(t=>t.evId==='main'&&t.status!=='cancelled');
+  const P=stickersFor(store.myTickets().filter(t=>t.evId==='main'),store.myPassport()), tk=store.myTickets().find(t=>t.evId==='main'&&t.status!=='cancelled');
   box.innerHTML=`<h3 style="font-family:Fredoka;font-size:24px">MUSIC FOR CHANGE – CONCERT PASSPORT</h3><p style="color:var(--ink2)">One notebook, one smile — 10C9, Nguyen Van Linh High School</p>
    <div class="kv" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0;font-size:14px"><div>Name<br><b>${esc(u.name)}</b></div><div>Class<br><b>${esc(u.cls)||'—'}</b></div><div>Ticket<br><b>${tk?esc(tk.type):'No ticket yet'}</b></div><div>Seat<br><b>${tk?esc(tk.seats):'—'}</b></div></div>
-   <div class="stickers">${P.list.map(x=>`<div class="stk ${x.got?'got':''}"><span class="n">${x.got?'✅':x.n}</span><b>${x.label}</b><small>${x.how}</small></div>`).join('')}<div class="stk"><span class="n">★</span><b>Bonus</b><small>Ask the band a question in English (optional)</small></div></div>
+   <div class="stickers">${P.list.map(x=>`<div class="stk ${x.got?'got':''}"><span class="n">${x.got?'✅':x.n}</span><b>${x.label}</b><small>${x.how}</small></div>`).join('')}<div class="stk"><span class="n">★</span><b>Bonus sticker</b><small>Optional</small></div></div>
    <div class="note-box" style="font-size:15px">RESULT: <b>${P.completed?'🎉 COMPLETED (6/6)':`NOT COMPLETED YET (${P.count}/6)`}</b>${tk?'':' · <a href="#ticketbox">Get your ticket</a>'}</div>` }
+
+/* ====== CONCERT PASSPORT · PARTS 1–5 ====== */
+const P1_WORDS=['perform','audience','talented','musical instrument','traditional','string','vibrate','donate'];
+const P1_DEFS={a:'a tool used to make music',b:'to entertain people by acting or playing music',c:'to move back and forth very quickly',d:'people watching or listening to a show',e:'to give money or goods to help others',f:'having a natural ability to do something well',g:'a thin wire stretched on a guitar or violin',h:'following customs passed down over time'};
+const P1_KEY=['b','d','f','a','h','g','c','e'];
+const P3Q=[['How many strings does the dan bau have?',['one','sixteen'],0],['The ukulele comes from:',['Hawaii','Viet Nam'],0],['Our shaker makes a sound when the ________ hit the bottle:',['beans','strings'],0]];
+const ORDER_STEPS={A:'Receive QR ticket',B:'Fill in the form',C:'System verifies & saves data'}, ORDER_KEY=['B','C','A'];
+const STATIONS=[
+ {part:'p4a',title:'🎸 STATION A – INSTRUMENT STATION (Group 3)',sticker:4,color:'#1d4fa3',tried:['ukulele','electric guitar','shaker'],
+  qs:[['Four measurements of a ukulele string: 35.0 − 35.2 − 35.0 − 34.8 cm. The average length is:',['35.0 cm','140 cm'],0],['Pressing a string on a fret makes the vibrating part shorter, so the pitch becomes:',['higher','lower'],0]]},
+ {part:'p4b',title:'💻 STATION B – WEBSITE & SHOP (Group 4)',sticker:5,color:'#13866f',order:true,
+  qs:[['A 3-minute museum video uses 50 MB per minute. Total file size is:',['150 MB','3 GB'],0]]},
+ {part:'p4c',title:'🎫 STATION C – PASSPORT DESK (Group 1)',sticker:6,color:'#c2410c',
+  qs:[['20 Standard tickets (1 notebook each) and 5 VIP tickets (3 notebooks each). Total notebooks needed:',['25','35','60'],1],['Given sets A = {Khang An, Khanh Linh, Thanh Nha} and B = {Thanh Nha, Dung}. Number of students in A ∪ B:',['4','5'],0]]}
+];
+const P5F=[['fav','1. My favourite instrument is the',0],['because','because',1],['today','2. Today I',0],['feel','so I feel',0],['message','3. One thing I want to say to our class:',1]];
+const PART_LABEL={p1:'Part 1 · New Words',p2:'Part 2 · Sing & Fill',p3:'Part 3 · Museum Quiz',p4a:'Station A',p4b:'Station B',p4c:'Station C',p5:'Part 5 · Reflection'};
+const myPart=part=>store?store.myPassport().find(r=>r.part===part):null;
+const cpState={}, cpChecked={};
+const checked=part=>cpChecked[part]??!!myPart(part);
+function savedLine(part){ const r=myPart(part); return r?`<span class="cp-saved">✓ Saved${r.score!=null?` · ${r.score}/${r.total}`:''} · attempt ${r.attempts}</span>`:(me()?'':'<span class="cp-saved" style="color:var(--ink2)">Log in to save your answers</span>') }
+async function savePart(part,answers,score,total,label){
+  if(!me()){ toast('Log in to save it to your passport'); openAuth('login',()=>savePart(part,answers,score,total,label)); return false }
+  try{ await store.savePassport(part,answers,score,total); cpChecked[part]=true; toast(`✅ ${label} saved`); renderCP(); return true }catch(e){ toast(e.message); return false } }
+function stState(part){ if(cpState[part]) return cpState[part]; const a=myPart(part)?.answers||{};
+  const n={p1:8,p3:3,p4a:2,p4b:1,p4c:2}[part];
+  return cpState[part]={picks:a.picks?[...a.picks]:Array(n).fill(part==='p1'?'':null),tried:a.tried||null,order:a.order?[...a.order]:['','',''],...(part==='p5'?{...a}:{})} }
+function mcq(part,qi,q,pick,showMark){ const ok=pick===q[2];
+  return `<div class="cpq ${showMark?(ok?'ok':'no'):''}"><p>${String.fromCharCode(97+qi)}) ${q[0]} ${showMark?`<span class="mark ${ok?'ok':'no'}">${ok?'✓':'✗ try again'}</span>`:''}</p><div class="pledges">${q[1].map((o,k)=>`<button class="pledge ${pick===k?'on':''}" data-act="cpPick" data-part="${part}" data-q="${qi}" data-o="${k}">${o}</button>`).join('')}</div></div>` }
+function renderP1(){ const st=stState('p1'), chk=checked('p1');
+  $('#cp1').innerHTML=`<div class="cp-head"><h3>🎼 PART 1 – NEW WORDS <small>(Activity 1)</small></h3></div><p class="cp-task"><b>Task:</b> Match each English word (1 – 8) with its correct definition (a – h).</p>
+   <div style="overflow-x:auto"><table class="match"><thead><tr><th>No.</th><th>English Word</th><th>Answer</th><th>Definition</th></tr></thead><tbody>
+   ${P1_WORDS.map((w,i)=>{ const L='abcdefgh'[i], ok=st.picks[i]===P1_KEY[i]; return `<tr><td>${i+1}</td><td><b>${w}</b></td><td style="white-space:nowrap">${i+1} – <select data-p1="${i}" aria-label="Answer for ${w}"><option value="">—</option>${'abcdefgh'.split('').map(x=>`<option ${st.picks[i]===x?'selected':''}>${x}</option>`).join('')}</select>${chk&&st.picks[i]?`<span class="mark ${ok?'ok':'no'}">${ok?'✓':'✗'}</span>`:''}</td><td>${L}. ${P1_DEFS[L]}</td></tr>` }).join('')}</tbody></table></div>
+   <div class="cp-actions">${savedLine('p1')}<button class="btn primary" data-act="cpSubmit" data-part="p1">Check &amp; save</button></div>`;
+  $$('#cp1 [data-p1]').forEach(x=>x.onchange=()=>{ st.picks[+x.dataset.p1]=x.value; cpChecked.p1=false; renderP1() }) }
+function renderP3(){ const st=stState('p3'), chk=checked('p3');
+  $('#cp3').innerHTML=`<div class="cp-head"><h3>🏛️ PART 3 – MUSEUM QUIZ <small>(Activity 4)</small></h3><span class="cp-badge">🏷️ Sticker 3 · Score 2/3</span></div><p class="cp-task">Tick the correct option:</p>
+   ${P3Q.map((q,i)=>mcq('p3',i,q,st.picks[i],chk&&st.picks[i]!=null)).join('')}
+   <div class="cp-actions">${savedLine('p3')}<button class="btn primary" data-act="cpSubmit" data-part="p3">Check &amp; save</button></div>` }
+function renderP4(){ $('#cp4').innerHTML=`<div class="panel" style="margin-bottom:16px"><div class="cp-head"><h3>🎪 PART 4 – CONCERT STATIONS <small>(Activity 5)</small></h3></div><p class="cp-task" style="margin:0"><i>Answer both questions correctly or retry a missed one at each station to earn 1 Sticker.</i></p></div>`+
+  STATIONS.map(S=>{ const st=stState(S.part), chk=checked(S.part);
+    let body='';
+    if(S.tried) body+=`<div class="cpq"><p>Instrument I tried:</p><div class="pledges">${S.tried.map(t=>`<button class="pledge ${st.tried===t?'on':''}" data-act="cpTried" data-part="${S.part}" data-t="${t}">${t}</button>`).join('')}</div></div>`;
+    if(S.order){ const ok=st.order.join('')===ORDER_KEY.join('');
+      body+=`<div class="cpq ${chk?(ok?'ok':'no'):''}"><p>a) Online ticket booking process: Put the steps in order: ${chk?`<span class="mark ${ok?'ok':'no'}">${ok?'✓':'✗ try again'}</span>`:''}</p>
+       <div class="order">${[0,1,2].map(k=>`<select data-order="${k}" data-part="${S.part}" aria-label="Step ${k+1}"><option value="">____</option>${['A','B','C'].map(x=>`<option ${st.order[k]===x?'selected':''}>${x}</option>`).join('')}</select>${k<2?' ➜ ':''}`).join('')}</div>
+       <p style="font-weight:600;font-size:13.5px;color:var(--ink2);margin-top:6px">(A) Receive QR ticket &nbsp;|&nbsp; (B) Fill in the form &nbsp;|&nbsp; (C) System verifies &amp; saves data</p></div>`;
+      body+=S.qs.map((q,i)=>mcq(S.part,i,q,st.picks[i],chk&&st.picks[i]!=null).replace(/^<div class="cpq([^"]*)"><p>a\)/,'<div class="cpq$1"><p>b)')).join('') }
+    else body+=S.qs.map((q,i)=>mcq(S.part,i,q,st.picks[i],chk&&st.picks[i]!=null)).join('');
+    return `<div class="station" style="--sc:${S.color}"><div class="cp-head"><h4>${S.title}</h4><span class="cp-badge">🏷️ Sticker ${S.sticker}</span></div>${body}
+     <div class="cp-actions">${savedLine(S.part)}<button class="btn primary" data-act="cpSubmit" data-part="${S.part}">Check &amp; save</button></div></div>` }).join('');
+  $$('#cp4 [data-order]').forEach(x=>x.onchange=()=>{ stState(x.dataset.part).order[+x.dataset.order]=x.value; cpChecked[x.dataset.part]=false; renderP4() }) }
+function renderP5(){ const st=stState('p5');
+  $('#cp5').innerHTML=`<div class="cp-head"><h3>💬 PART 5 – MY REFLECTION <small>(End of the lesson)</small></h3></div>
+   ${P5F.map(([k,label,big])=>`<div class="field"><label>${label}</label>${big?`<textarea data-p5="${k}" rows="3" maxlength="600">${esc(st[k]||'')}</textarea>`:`<input data-p5="${k}" maxlength="200" value="${esc(st[k]||'')}">`}</div>`).join('')}
+   <div class="cp-actions">${savedLine('p5')}<button class="btn primary" data-act="cpSubmit" data-part="p5">Save my reflection</button></div>
+   <div class="note-box" style="text-align:center;margin-top:16px;background:#e6faf5"><b>🎉 CONGRATULATIONS ON COMPLETING THE JOURNEY!</b><br><i>Keep the rhythm, share the love &amp; make the change! · 10C9 – Music for Change</i></div>`;
+  $$('#cp5 [data-p5]').forEach(x=>x.oninput=()=>{ st[x.dataset.p5]=x.value }) }
+function renderCP(){ if(!$('#cp1')) return; renderPassport(); renderP1(); renderSingFill(); renderP3(); renderP4(); renderP5() }
+function scorePart(part){ const st=stState(part);
+  if(part==='p1'){ if(st.picks.some(x=>!x)) throw new Error('Please match all 8 words'); return [{picks:st.picks},st.picks.filter((x,i)=>x===P1_KEY[i]).length,8] }
+  if(part==='p3'){ if(st.picks.some(x=>x==null)) throw new Error('Please answer all 3 questions'); return [{picks:st.picks},st.picks.filter((x,i)=>x===P3Q[i][2]).length,3] }
+  if(part==='p5'){ const a={}; P5F.forEach(([k])=>a[k]=(st[k]||'').trim()); if(P5F.some(([k])=>!a[k])) throw new Error('Please complete all the sentences'); return [a,null,null] }
+  const S=STATIONS.find(x=>x.part===part);
+  if(S.tried&&!st.tried) throw new Error('Choose the instrument you tried');
+  if(S.order&&st.order.some(x=>!x)) throw new Error('Put the 3 steps in order');
+  if(st.picks.some(x=>x==null)) throw new Error('Please answer every question');
+  let sc=st.picks.filter((x,i)=>x===S.qs[i][2]).length; if(S.order&&st.order.join('')===ORDER_KEY.join('')) sc++;
+  const a={picks:st.picks}; if(S.tried) a.tried=st.tried; if(S.order) a.order=st.order; return [a,sc,2] }
 
 /* ====== MERCH ====== */
 let mcat='All'; const msel={};
@@ -465,13 +542,13 @@ const kpi=(l,v,s,p)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><
 const pct=(a,b)=>b?a/b*100:0;
 function renderAdmin(){ if(!isAdmin()) return;
   if(adm.tab!=='checkin'&&adm.scanning){ stopScanner(); adm.scanning=false }
-  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['quiz','❓ Activity results'],['vlog','🎬 Vlog review'],['merch','🛍️ Merchandise']];
+  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['passport','🎟️ Passports'],['quiz','❓ Activity results'],['vlog','🎬 Vlog review'],['merch','🛍️ Merchandise']];
   $('#admTabs').innerHTML=tabs.map(t=>`<button class="cat ${adm.tab===t[0]?'on':''}" data-act="admtab" data-t="${t[0]}">${t[1]}</button>`).join('');
-  $('#admBody').innerHTML=({checkin:admCheckin,overview:admOverview,users:admUsers,tickets:admTickets,quiz:admQuiz,vlog:admVlog,merch:admMerch})[adm.tab]();
+  $('#admBody').innerHTML=({checkin:admCheckin,passport:admPassport,overview:admOverview,users:admUsers,tickets:admTickets,quiz:admQuiz,vlog:admVlog,merch:admMerch})[adm.tab]();
   if(adm.tab==='checkin') bindCheckin() }
 
 const userTickets=uid=>store.tickets().filter(t=>t.uid===uid&&t.evId==='main');
-const passportOf=uid=>stickersFor(userTickets(uid),store.quiz().filter(q=>q.uid===uid));
+const passportOf=uid=>stickersFor(userTickets(uid),store.passportAll().filter(r=>r.uid===uid));
 function nbTotals(){ const T=store.tickets().filter(t=>t.evId==='main'); const live=T.filter(t=>t.status!=='cancelled'), ch=T.filter(t=>t.status==='checked');
   return {expected:live.reduce((a,t)=>a+nbOf(t),0), received:ch.reduce((a,t)=>a+nbOf(t),0), guests:ch.reduce((a,t)=>a+t.qty,0), booked:live.reduce((a,t)=>a+t.qty,0)} }
 
@@ -560,6 +637,42 @@ function admQuiz(){ const A=store.quiz(), by=k=>A.filter(a=>a.total===k), sfA=by
    ${adm.open[k]?`<tr class="detail"><td colspan="6">${detail(a)}</td></tr>`:''}`).join('')||'<tr><td colspan="6" class="empty">No results yet</td></tr>'}
   </tbody></table></div>` }
 
+function admPassport(){ const R=store.passportAll(), users=store.users(), q=adm.q.toLowerCase();
+  const ids=[...new Set([...R.map(r=>r.uid),...users.filter(u=>u.role==='user').map(u=>u.id)])];
+  const row=(uid,part)=>R.find(r=>r.uid===uid&&r.part===part);
+  const people=ids.map(uid=>{ const u=users.find(x=>x.id===uid)||{name:'Deleted user',u:'',cls:''}; return {uid,u,P:passportOf(uid),last:Math.max(0,...R.filter(r=>r.uid===uid).map(r=>r.at))} })
+    .filter(p=>!q||(p.u.name+' '+p.u.u+' '+p.u.cls).toLowerCase().includes(q)).sort((a,b)=>b.last-a.last);
+  const by=part=>R.filter(r=>r.part===part), avg=part=>{ const a=by(part); return a.length?(a.reduce((s,r)=>s+r.score,0)/a.length).toFixed(1):'—' };
+  const rate=(part,i,key)=>{ const a=by(part).filter(r=>r.answers.picks); const c=a.filter(r=>r.answers.picks[i]===key).length; return [c,a.length] };
+  const bar=(label,[c,n])=>`<div class="bar-row" title="${c} of ${n} correct"><span>${label}</span>${meter(pct(c,n))}<span class="num">${n?Math.round(pct(c,n))+'%':'—'}</span></div>`;
+  const cell=(uid,part,need)=>{ const r=row(uid,part); if(!r) return '<td style="color:var(--ink2)">—</td>'; const ok=need==null||r.score>=need; return `<td class="num" title="${r.attempts} attempt(s)" style="color:${ok?'#13866f':'#d6285a'}">${r.score}/${r.total}${need!=null?(ok?' ✓':''):''}</td>` };
+  const pick=(q,i)=>i==null?'—':esc(q[1][i]);
+  const detail=uid=>{ const g=p=>row(uid,p)?.answers||null, out=[];
+    const a1=g('p1'); if(a1) out.push(`<b>Part 1:</b> ${P1_WORDS.map((w,i)=>`${a1.picks[i]===P1_KEY[i]?'✅':'❌'} ${w} → ${esc(a1.picks[i]||'—')}${a1.picks[i]===P1_KEY[i]?'':` (correct: ${P1_KEY[i]})`}`).join(' · ')}`);
+    const a2=g('p2'); if(a2) out.push(`<b>Part 2:</b> ${a2.words.map((w,i)=>`${w===WORDS[i]?'✅':'❌'} (${i+1}) ${esc(w||'—')}${w===WORDS[i]?'':` (correct: ${WORDS[i]})`}`).join(' · ')}`);
+    const a3=g('p3'); if(a3) out.push(`<b>Part 3:</b> ${P3Q.map((qq,i)=>`${a3.picks[i]===qq[2]?'✅':'❌'} ${String.fromCharCode(97+i)}) ${pick(qq,a3.picks[i])}`).join(' · ')}`);
+    STATIONS.forEach(S=>{ const a=g(S.part); if(!a) return; const bits=[]; if(S.tried) bits.push(`tried: <b>${esc(a.tried)}</b>`);
+      if(S.order) bits.push(`${a.order.join('')===ORDER_KEY.join('')?'✅':'❌'} order ${a.order.join(' ➜ ')}`);
+      S.qs.forEach((qq,i)=>bits.push(`${a.picks[i]===qq[2]?'✅':'❌'} ${pick(qq,a.picks[i])}`)); out.push(`<b>${PART_LABEL[S.part]}:</b> ${bits.join(' · ')}`) });
+    const a5=g('p5'); if(a5) out.push(`<b>Part 5 – Reflection:</b><br>1. My favourite instrument is the <b>${esc(a5.fav)}</b> because ${esc(a5.because)}<br>2. Today I ${esc(a5.today)}, so I feel ${esc(a5.feel)}<br>3. One thing I want to say to our class: “${esc(a5.message)}”`);
+    return out.join('<br>')||'No answers yet' };
+  return `<div class="kpis">${kpi('Students started',new Set(R.map(r=>r.uid)).size,`${R.length} parts submitted`)}${kpi('Passports completed',people.filter(p=>p.P.completed).length,'6/6 stickers')}${kpi('Part 1 average',avg('p1'),'out of 8')}${kpi('Reflections',by('p5').length,'Part 5 written')}</div>
+  <div class="apanel"><h3>Correct answers by question</h3><div class="bars">
+   ${P1_WORDS.map((w,i)=>bar(`P1 · ${w}`,rate('p1',i,P1_KEY[i]))).join('')}
+   ${WORDS.slice(0,6).map((w,i)=>{ const a=by('p2'); return bar(`P2 · (${i+1}) ${w}`,[a.filter(r=>r.answers.words?.[i]===w).length,a.length]) }).join('')}
+   ${P3Q.map((qq,i)=>bar(`P3 · ${String.fromCharCode(97+i)}) ${qq[1][qq[2]]}`,rate('p3',i,qq[2]))).join('')}
+   ${STATIONS.map(S=>{ const a=by(S.part); return bar(`${PART_LABEL[S.part]} · both correct`,[a.filter(r=>r.score>=2).length,a.length]) }).join('')}
+  </div></div>
+  <div class="apanel"><div class="toolbar"><h3 style="margin:0">Students (${people.length})</h3><input data-chg="admq" placeholder="Search name, username, class…" value="${esc(adm.q)}" style="margin-left:auto"></div>
+  <table class="t"><thead><tr><th>Student</th><th>Stickers</th><th>P1</th><th>P2</th><th>P3</th><th>St. A</th><th>St. B</th><th>St. C</th><th>P5</th><th>Last update</th><th></th></tr></thead><tbody>
+  ${people.map(p=>`<tr><td><b>${esc(p.u.name)}</b><br><small style="color:var(--ink2)">@${esc(p.u.u)} · ${esc(p.u.cls)||'—'}</small></td>
+    <td><b class="num">${p.P.count}/6</b> ${p.P.completed?'<span class="status st-active">COMPLETED</span>':''}<br><small style="color:var(--ink2)">${p.P.list.map(x=>x.got?'●':'○').join('')}</small></td>
+    ${cell(p.uid,'p1',null)}${cell(p.uid,'p2',4)}${cell(p.uid,'p3',2)}${cell(p.uid,'p4a',2)}${cell(p.uid,'p4b',2)}${cell(p.uid,'p4c',2)}
+    <td>${row(p.uid,'p5')?'✍️':'—'}</td><td>${p.last?fmtDate(p.last):'—'}</td>
+    <td><button class="btn ghost xs" data-act="qdetail" data-i="pp-${p.uid}">${adm.open['pp-'+p.uid]?'Hide':'View'}</button></td></tr>
+    ${adm.open['pp-'+p.uid]?`<tr class="detail"><td colspan="11" style="line-height:1.9">${detail(p.uid)}</td></tr>`:''}`).join('')||'<tr><td colspan="11" class="empty">No students yet</td></tr>'}
+  </tbody></table><p style="font-size:13px;color:var(--ink2);margin-top:10px">Stickers: 1 Check-in · 2 Sing &amp; Fill ≥ 4/6 · 3 Museum ≥ 2/3 · 4–6 Stations A–C both correct. Hover a score to see the number of attempts.</p></div>` }
+
 function admVlog(){ const {posts,comments}=vlogData(), q=adm.q.toLowerCase(), P=posts.filter(p=>!q||(p.title+' '+p.author+' '+p.caption).toLowerCase().includes(q));
   return `<div class="kpis">${kpi('Vlogs',posts.length,`${posts.filter(p=>p.yt).length} with a YouTube video`)}${kpi('Photos',posts.reduce((a,p)=>a+p.images.length,0),'uploaded')}${kpi('Comments',comments.length,'on all vlogs')}</div>
   <div class="apanel"><div class="toolbar"><h3 style="margin:0">All vlogs (${P.length})</h3><input data-chg="admq" placeholder="Search title, author, words…" value="${esc(adm.q)}" style="margin-left:auto"><button class="btn ghost xs" data-act="vlogReload">↻ Refresh</button></div>
@@ -585,7 +698,7 @@ function admMerch(){ const totalS=MERCH.reduce((a,m)=>a+merchInv(m.n).stock,0), 
   </tbody></table><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px"><small style="color:var(--ink2)">Available = stock − handed out − selected. "Give" hands the item to that guest. Photos appear on the Merchandise page (first photo is the main one).</small><button class="btn primary xs" data-act="savestock">💾 Save stock</button></div></div>` }
 
 /* ====== SEARCH ====== */
-const INDEX=[{t:'Performance Vlog',s:'Videos, photos & comments',i:'🎬',go:'performance'},...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'My stickers',i:'🏅',go:'museum',hall:'h-pass'},{t:'Sing & Fill',s:'Sticker 2',i:'🎶',go:'museum',hall:'h-sing'},...MERCH.map((m,i)=>({t:m.label,s:'Merchandise · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
+const INDEX=[{t:'Performance Vlog',s:'Videos, photos & comments',i:'🎬',go:'performance'},...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'Parts 1–5 · stickers',i:'🎟️',go:'cpass'},{t:'Sing & Fill',s:'Concert Passport · Part 2',i:'🎶',go:'cpass'},...MERCH.map((m,i)=>({t:m.label,s:'Merchandise · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
 $('#q').oninput=e=>{ const v=e.target.value.trim().toLowerCase(), r=$('#results'); if(!v){ r.classList.remove('show'); return }
   const hits=INDEX.filter(x=>(x.t+' '+x.s).toLowerCase().includes(v)).slice(0,7);
   r.innerHTML=hits.length?hits.map((h,k)=>`<button data-h="${k}"><span>${h.i}</span><span>${h.t}<br><small>${h.s}</small></span></button>`).join(''):'<div style="padding:12px 16px;color:var(--ink2)">No results</div>'; r.classList.add('show');
@@ -594,7 +707,7 @@ $('#q').oninput=e=>{ const v=e.target.value.trim().toLowerCase(), r=$('#results'
     if(h.el) setTimeout(()=>{ const el=document.getElementById(h.el); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.animate([{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:600}) } },350) }) };
 
 /* ====== START ====== */
-function renderAll(){ renderHeader(); renderNb(); renderEvents(); renderTB(); renderVlog(); renderMerch(); renderPassport(); if($('#admin').classList.contains('active')) renderAdmin() }
+function renderAll(){ renderHeader(); renderNb(); renderEvents(); renderTB(); renderVlog(); renderMerch(); renderCP(); if($('#admin').classList.contains('active')) renderAdmin() }
 // A ticket QR opens  <site>/?ticket=CODE  — staff (admin) go straight to check-in; guests see their ticket.
 async function openTicketLink(code){ history.replaceState(null,'',location.pathname+(location.hash||'#home'));
   if(isAdmin()){ adm.tab='checkin'; adm.code=code; go('admin'); return }
@@ -610,7 +723,7 @@ async function openTicketLink(code){ history.replaceState(null,'',location.pathn
   if(store?.mode==='unconfigured'){ const bar=document.createElement('div'); bar.setAttribute('role','alert');
     bar.style.cssText='background:#2b2350;color:#ffc93c;text-align:center;padding:10px 16px;font-weight:700;font-size:14px';
     bar.textContent='⚠️ '+NOT_CONFIGURED_MESSAGE; document.body.prepend(bar) }
-  renderQuiz(); renderSingFill(); renderAll(); loadVlog(); go(location.hash.slice(1)||'home');
+  renderQuiz(); renderAll(); loadVlog(); go(location.hash.slice(1)||'home');
   const tk=findCode(new URLSearchParams(location.search).get('ticket')); if(tk) await openTicketLink(tk);
   // keep numbers fresh when the tab is shown again (e.g. admin dashboard on the entrance laptop)
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&store&&!busy) store.refresh().then(renderAll).catch(()=>{}) });

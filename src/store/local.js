@@ -65,6 +65,12 @@ export const localStore = {
   tickets: () => curRaw()?.role === 'admin' ? DB.tickets.map(mapTicket) : localStore.myTickets(),
   myTickets: () => { const u = curRaw(); return u ? DB.tickets.filter(t => t.u === u.u).map(mapTicket) : [] },
   quiz: () => curRaw()?.role === 'admin' ? DB.quiz.map(q => ({ ...q, uid: q.u })) : [],
+  myPassport: () => { const u = curRaw(); return u ? Object.values(DB.passport?.[u.u] || {}) : [] },
+  passportAll: () => curRaw()?.role === 'admin' ? Object.values(DB.passport || {}).flatMap(o => Object.values(o)) : [],
+  async savePassport(part, answers, score, total) {
+    const u = requireUser(); DB.passport ??= {}; const mine = DB.passport[u.u] ??= {}; const prev = mine[part];
+    mine[part] = { uid: u.u, part, answers, score, total, attempts: (prev?.attempts || 0) + 1, at: Date.now() }; save();
+  },
   myQuiz: () => { const u = curRaw(); return u ? DB.quiz.filter(q => q.u === u.u).map(q => ({ ...q, uid: q.u })) : [] },
   votes: id => DB.votes[id] || [],
   myWish: () => { const u = curRaw(); return u ? (DB.wish[u.u] || []) : [] },

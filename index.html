@@ -28,6 +28,7 @@
     <button class="tab" data-go="ticketbox">🎫 Ticketbox</button>
     <button class="tab" data-go="performance">🎤 Performance</button>
     <button class="tab" data-go="museum">🎻 Musical Museum</button>
+    <button class="tab" data-go="cpass">🎟️ Concert Passport</button>
     <button class="tab" data-go="merch">🛍️ Merchandise Collection</button>
     <button class="tab" data-go="contact">💌 Contact</button>
     <button class="tab" data-go="admin" id="adminTab" hidden>🛠️ Admin</button>
@@ -130,13 +131,11 @@
 <!-- MUSEUM -->
 <section class="view" id="museum">
   <h2 class="title">🎻 Musical Museum</h2>
-  <p class="sub">Backstage Tour: Zone A – Instrument Museum (Group 3) and Zone B – Digital Stage Lab (Group 4). Collect your stickers, then check your Concert Passport.</p>
+  <p class="sub">Backstage Tour: Zone A – Instrument Museum (Group 3) and Zone B – Digital Stage Lab (Group 4).</p>
   <div class="halls" id="halls">
     <button class="cat on" data-hall="h-inst">🎸 Zone A · Instrument Museum</button>
     <button class="cat" data-hall="h-quiz">❓ Physics Quiz</button>
     <button class="cat" data-hall="h-lab">💡 Zone B · Digital Stage Lab</button>
-    <button class="cat" data-hall="h-sing">🎶 Sing &amp; Fill</button>
-    <button class="cat" data-hall="h-pass">🏅 My Concert Passport</button>
   </div>
   <div id="h-inst" class="hall"><div class="inst-grid" id="insts"></div></div>
   <div id="h-quiz" class="hall" hidden><div class="panel" id="quiz"></div></div>
@@ -153,8 +152,22 @@
     </div>
     <div class="panel" id="labQuiz" style="margin-top:18px"></div>
   </div>
-  <div id="h-sing" class="hall" hidden><p style="color:var(--ink2);margin-bottom:10px">Listen to the band and fill in 6 words · 4/6 or more = Sticker 2</p><div class="panel" id="singfill"></div></div>
-  <div id="h-pass" class="hall" hidden><div class="panel" id="passport"></div></div>
+</section>
+
+<!-- CONCERT PASSPORT -->
+<section class="view" id="cpass">
+  <h2 class="title">🎟️ Concert Passport</h2>
+  <p class="sub">MUSIC FOR CHANGE · Integrated Music &amp; Learning Project. Do Parts 1–5, collect your stickers and complete your passport (6/6).</p>
+  <div class="panel" id="passport"></div>
+  <div class="cp-nav" id="cpNav">
+    <button class="cat" data-act="cpJump" data-to="cp1">🎼 Part 1 · New Words</button><button class="cat" data-act="cpJump" data-to="cp2">🎤 Part 2 · Sing &amp; Fill</button><button class="cat" data-act="cpJump" data-to="cp3">🏛️ Part 3 · Museum Quiz</button><button class="cat" data-act="cpJump" data-to="cp4">🎪 Part 4 · Stations</button><button class="cat" data-act="cpJump" data-to="cp5">💬 Part 5 · Reflection</button>
+  </div>
+  <div class="panel cp-part" id="cp1"></div>
+  <div class="panel cp-part" id="cp2"><div class="cp-head"><h3>🎤 PART 2 – SING &amp; FILL <small>(Activity 3)</small></h3><span class="cp-badge">🏷️ Sticker 2 · Score 4/6</span></div>
+    <p class="cp-task"><b>Task:</b> Listen to the song <i>“Music for Change”</i> (Lyrics: Group 2 – 10C9 · Music: Suno AI) and fill in the blanks.</p><div id="singfill"></div></div>
+  <div class="panel cp-part" id="cp3"></div>
+  <div class="cp-part" id="cp4"></div>
+  <div class="panel cp-part" id="cp5"></div>
 </section>
 
 <!-- MERCH -->

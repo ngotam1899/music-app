@@ -12,7 +12,7 @@ export function createSupabaseStore(url, anonKey) {
   let S = emptyState();
 
   function emptyState() {
-    return { profile: null, users: [], inv: {}, avail: {}, merch: {}, votes: {}, myTickets: [], allTickets: [], quiz: [], myQuiz: [], myWish: [], wishAll: {} };
+    return { profile: null, users: [], inv: {}, avail: {}, merch: {}, votes: {}, myTickets: [], allTickets: [], quiz: [], myQuiz: [], myPassport: [], passportAll: [], myWish: [], wishAll: {} };
   }
   const mapProfile = p => ({ id: p.id, u: p.username, name: p.name, cls: p.cls, role: p.role, active: p.active, at: Date.parse(p.created_at) });
   const mapTicket = r => ({
@@ -20,6 +20,7 @@ export function createSupabaseStore(url, anonKey) {
     qty: r.qty, seatList: r.seats || [], seats: (r.seats || []).length ? r.seats.join(', ') : 'Standing',
     uid: r.user_id, u: r.username, name: r.name, cls: r.cls, phone: r.phone, pledge: r.pledge, status: r.status, at: Date.parse(r.created_at),
   });
+  const mapPass = r => ({ uid: r.user_id, part: r.part, answers: r.answers || {}, score: r.score, total: r.total, attempts: r.attempts, at: Date.parse(r.updated_at) });
   const mapQuiz = q => ({ uid: q.user_id, u: q.username, name: q.name, cls: q.cls, score: q.score, total: q.total, answers: q.answers || [], at: Date.parse(q.created_at) });
   const mapPost = r => ({ id: r.id, uid: r.user_id, author: r.author_name, cls: r.author_cls, title: r.title, caption: r.caption, yt: r.youtube_id, images: r.images || [], at: Date.parse(r.created_at), edited: Date.parse(r.updated_at) - Date.parse(r.created_at) > 2000 });
   const mapComment = r => ({ id: r.id, postId: r.post_id, uid: r.user_id, author: r.author_name, cls: r.author_cls, body: r.body, at: Date.parse(r.created_at) });
@@ -58,21 +59,25 @@ export function createSupabaseStore(url, anonKey) {
     if (session && (!p || !p.active)) { await sb.auth.signOut({ scope: 'local' }); S = next; if (p && !p.active) fail('This account is locked. Please contact the admin.'); return }
     if (p) {
       next.profile = mapProfile(p);
-      const [mine, wish, myq] = await Promise.all([
+      const [mine, wish, myq, myp] = await Promise.all([
         sb.from('tickets').select('*').eq('user_id', p.id).order('created_at', { ascending: false }),
         sb.from('wishlist').select('item').eq('user_id', p.id),
         sb.from('quiz_attempts').select('*').eq('user_id', p.id).order('created_at', { ascending: false }),
+        sb.from('passport_answers').select('*').eq('user_id', p.id),
       ]);
+      next.myPassport = ok(myp).map(mapPass);
       next.myTickets = ok(mine).map(mapTicket);
       next.myWish = ok(wish).map(w => w.item);
       next.myQuiz = ok(myq).map(mapQuiz);
       if (p.role === 'admin') {
-        const [users, all, quiz, wishAll] = await Promise.all([
+        const [users, all, quiz, wishAll, pass] = await Promise.all([
           sb.from('profiles').select('*').order('created_at'),
           sb.from('tickets').select('*').order('created_at', { ascending: false }),
           sb.from('quiz_attempts').select('*').order('created_at', { ascending: false }),
           sb.from('wishlist').select('user_id,item'),
+          sb.from('passport_answers').select('*'),
         ]);
+        next.passportAll = ok(pass).map(mapPass);
         next.users = ok(users).map(mapProfile);
         next.allTickets = ok(all).map(mapTicket);
         next.quiz = ok(quiz).map(mapQuiz);
@@ -112,6 +117,13 @@ export function createSupabaseStore(url, anonKey) {
     myTickets: () => S.myTickets,
     quiz: () => S.quiz,
     myQuiz: () => S.myQuiz,
+    myPassport: () => S.myPassport,
+    passportAll: () => S.passportAll,
+    async savePassport(part, answers, score, total) {
+      uid();
+      ok(await sb.from('passport_answers').upsert({ part, answers, score, total }, { onConflict: 'user_id,part' }));
+      await load();
+    },
     votes: id => S.votes[id] || [],
     myWish: () => S.myWish,
     wishAll: () => S.wishAll,
