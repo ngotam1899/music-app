@@ -120,18 +120,11 @@
 
 <!-- PERFORMANCE -->
 <section class="view" id="performance">
-  <h2 class="title">🎤 Performance</h2>
-  <p class="sub">Four groups, four parts of one concert. Tap the heart to vote for your favourite group.</p>
-  <div class="cats" id="genres"></div>
-  <div class="lineup" id="lineup"></div>
-  <div class="section">
-    <div class="section-head"><h3>🎶 Sing &amp; Fill <span class="squiggle">(Sticker 2)</span></h3><small style="color:var(--ink2)">Listen to the band and fill in 6 words · 4/6 or more = Sticker 2</small></div>
-    <div class="panel" id="singfill"></div>
-  </div>
-  <div class="section">
-    <div class="section-head"><h3>🕜 Programme · Mon 23 Nov 2026</h3></div>
-    <div class="timeline" id="runorder"></div>
-  </div>
+  <h2 class="title">🎬 Performance Vlog</h2>
+  <p class="sub">Videos, photos and stories from MUSIC FOR CHANGE. Log in to share your own vlog — a YouTube link, your words and photos — and comment on others.</p>
+  <div class="panel" id="vlogComposer"></div>
+  <div class="section-head" style="margin-top:28px"><h3>📺 Latest vlogs</h3><span id="vlogCount" style="color:var(--ink2);font-weight:700"></span></div>
+  <div class="vlog-feed" id="vlogFeed"></div>
 </section>
 
 <!-- MUSEUM -->
@@ -142,6 +135,7 @@
     <button class="cat on" data-hall="h-inst">🎸 Zone A · Instrument Museum</button>
     <button class="cat" data-hall="h-quiz">❓ Physics Quiz</button>
     <button class="cat" data-hall="h-lab">💡 Zone B · Digital Stage Lab</button>
+    <button class="cat" data-hall="h-sing">🎶 Sing &amp; Fill</button>
     <button class="cat" data-hall="h-pass">🏅 My Concert Passport</button>
   </div>
   <div id="h-inst" class="hall"><div class="inst-grid" id="insts"></div></div>
@@ -159,6 +153,7 @@
     </div>
     <div class="panel" id="labQuiz" style="margin-top:18px"></div>
   </div>
+  <div id="h-sing" class="hall" hidden><p style="color:var(--ink2);margin-bottom:10px">Listen to the band and fill in 6 words · 4/6 or more = Sticker 2</p><div class="panel" id="singfill"></div></div>
   <div id="h-pass" class="hall" hidden><div class="panel" id="passport"></div></div>
 </section>
 
@@ -257,6 +252,7 @@
     <p class="err" id="pErr"></p><button class="btn primary full" type="submit">Update password</button>
   </form>
 </div></div>
+<div class="modal" id="imgModal"><div class="box" style="max-width:980px;padding:14px"><button class="close" data-close>✕</button><img id="imgBig" alt="" style="width:100%;max-height:80vh;object-fit:contain;border-radius:14px;background:#000"></div></div>
 <div class="modal" id="tixModal"><div class="box"><button class="close" data-close>✕</button><h2 style="font-family:Fredoka;margin-bottom:16px">🎟️ My Tickets</h2><div id="tixList"></div></div></div>
 <div class="toast" id="toast"></div>
 

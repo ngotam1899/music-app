@@ -10,6 +10,7 @@ const ls = {
 };
 const rnd = () => Math.random().toString(36).slice(2, 10);
 const fail = m => { throw new Error(m) };
+const toDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f) });
 
 function freshDB() {
   const t = {}; BOOKABLE_EVENTS.forEach(e => { t[e] = { ...DEFAULT_CAPACITY[e] } });
@@ -94,6 +95,30 @@ export const localStore = {
     const code = '10C9-' + rnd().slice(0, 4).toUpperCase() + '-' + Date.now().toString(36).slice(-3).toUpperCase();
     const t = { code, evId: ev, ev: evTitle, when: evWhen, typeId: type, type: typeName, qty, seatList: seated ? [...seats] : [], seats: seated ? seats.join(', ') : 'Standing', u: u.u, name: u.name, cls: u.cls, phone, pledge, status: 'active', at: Date.now() };
     DB.tickets.unshift(t); save(); return mapTicket(t);
+  },
+  /* ---- Performance Vlog (demo: images kept as data URLs in this browser) ---- */
+  async vlogLoad() { DB.vlog ??= { posts: [], comments: [], seq: 1 }; return localStore.vlog() },
+  vlog: () => ({ posts: [...(DB.vlog?.posts || [])].sort((a, b) => b.at - a.at), comments: [...(DB.vlog?.comments || [])].sort((a, b) => a.at - b.at) }),
+  imageUrl: path => path,
+  async vlogCreate({ title, caption, yt, files }) {
+    const u = requireUser(); DB.vlog ??= { posts: [], comments: [], seq: 1 };
+    const images = await Promise.all(files.map(toDataUrl));
+    DB.vlog.posts.push({ id: DB.vlog.seq++, uid: u.u, author: u.name, cls: u.cls, title, caption, yt, images, at: Date.now(), edited: false }); save();
+  },
+  async vlogUpdate(id, { title, caption, yt, keep, files }) {
+    requireAdmin(); const p = DB.vlog.posts.find(x => x.id === id) || fail('Vlog not found');
+    Object.assign(p, { title, caption, yt, images: [...keep, ...(await Promise.all(files.map(toDataUrl)))], edited: true }); save();
+  },
+  async vlogDelete(id) {
+    const u = requireUser(), p = DB.vlog.posts.find(x => x.id === id) || fail('Vlog not found');
+    if (u.role !== 'admin' && p.uid !== u.u) fail('Not allowed');
+    DB.vlog.posts = DB.vlog.posts.filter(x => x !== p); DB.vlog.comments = DB.vlog.comments.filter(c => c.postId !== id); save();
+  },
+  async commentAdd(postId, body) { const u = requireUser(); DB.vlog.comments.push({ id: DB.vlog.seq++, postId, uid: u.u, author: u.name, cls: u.cls, body, at: Date.now() }); save() },
+  async commentDelete(id) {
+    const u = requireUser(), c = DB.vlog.comments.find(x => x.id === id) || fail('Comment not found');
+    if (u.role !== 'admin' && c.uid !== u.u) fail('Not allowed');
+    DB.vlog.comments = DB.vlog.comments.filter(x => x !== c); save();
   },
   async getTicketByCode(code) { const t = DB.tickets.find(x => x.code === code); return t ? mapTicket(t) : null },
   async setTicketStatus(code, status) {

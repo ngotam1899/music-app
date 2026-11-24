@@ -21,6 +21,21 @@ export function createSupabaseStore(url, anonKey) {
     uid: r.user_id, u: r.username, name: r.name, cls: r.cls, phone: r.phone, pledge: r.pledge, status: r.status, at: Date.parse(r.created_at),
   });
   const mapQuiz = q => ({ uid: q.user_id, u: q.username, name: q.name, cls: q.cls, score: q.score, total: q.total, answers: q.answers || [], at: Date.parse(q.created_at) });
+  const mapPost = r => ({ id: r.id, uid: r.user_id, author: r.author_name, cls: r.author_cls, title: r.title, caption: r.caption, yt: r.youtube_id, images: r.images || [], at: Date.parse(r.created_at), edited: Date.parse(r.updated_at) - Date.parse(r.created_at) > 2000 });
+  const mapComment = r => ({ id: r.id, postId: r.post_id, uid: r.user_id, author: r.author_name, cls: r.author_cls, body: r.body, at: Date.parse(r.created_at) });
+  let V = { posts: [], comments: [] };
+  const BUCKET = 'vlog-images';
+  const extOf = f => ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' })[f.type] || 'jpg';
+  async function uploadImages(files) {
+    const me = uid(), paths = [];
+    for (const f of files) {
+      const path = `${me}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extOf(f)}`;
+      const { error } = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type, upsert: false });
+      if (error) { if (paths.length) await sb.storage.from(BUCKET).remove(paths); fail('Image upload failed: ' + error.message) }
+      paths.push(path);
+    }
+    return paths;
+  }
   const isAdmin = () => S.profile?.role === 'admin' && S.profile?.active;
   const uid = () => S.profile?.id || fail('Please sign in first');
 
@@ -126,6 +141,39 @@ export function createSupabaseStore(url, anonKey) {
       const r = ok(await sb.rpc('book_ticket', { p_event: ev, p_event_title: evTitle, p_event_when: evWhen, p_type: type, p_type_name: typeName, p_qty: qty, p_seats: seats, p_phone: phone || '', p_pledge: pledge || '' }));
       await load(); return mapTicket(r);
     },
+    /* ---- Performance Vlog ---- */
+    async vlogLoad() {
+      const [p, c] = await Promise.all([
+        sb.from('vlog_posts').select('*').order('created_at', { ascending: false }),
+        sb.from('vlog_comments').select('*').order('created_at', { ascending: true }),
+      ]);
+      V = { posts: ok(p).map(mapPost), comments: ok(c).map(mapComment) };
+      return V;
+    },
+    vlog: () => V,
+    imageUrl: path => sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,
+    async vlogCreate({ title, caption, yt, files }) {
+      uid(); const images = await uploadImages(files);
+      const { error } = await sb.from('vlog_posts').insert({ title, caption, youtube_id: yt, images });
+      if (error) { if (images.length) await sb.storage.from(BUCKET).remove(images); fail(error.message) }
+      await store.vlogLoad();
+    },
+    async vlogUpdate(id, { title, caption, yt, keep, files, removed }) {
+      const added = await uploadImages(files);
+      const d = ok(await sb.from('vlog_posts').update({ title, caption, youtube_id: yt, images: [...keep, ...added] }).eq('id', id).select('id'));
+      if (!d.length) { if (added.length) await sb.storage.from(BUCKET).remove(added); fail('Only admins can edit vlogs') }
+      if (removed.length) await sb.storage.from(BUCKET).remove(removed);
+      await store.vlogLoad();
+    },
+    async vlogDelete(id) {
+      const post = V.posts.find(p => p.id === id);
+      const d = ok(await sb.from('vlog_posts').delete().eq('id', id).select('id'));
+      if (!d.length) fail('Not allowed');
+      if (post?.images.length) await sb.storage.from(BUCKET).remove(post.images);
+      await store.vlogLoad();
+    },
+    async commentAdd(postId, body) { uid(); ok(await sb.from('vlog_comments').insert({ post_id: postId, body })); await store.vlogLoad() },
+    async commentDelete(id) { const d = ok(await sb.from('vlog_comments').delete().eq('id', id).select('id')); if (!d.length) fail('Not allowed'); await store.vlogLoad() },
     // Public ticket view for a scanned QR (no login). Returns only what is printed on the e-ticket.
     async getTicketByCode(code) {
       const rows = ok(await sb.rpc('get_ticket_public', { p_code: code }));

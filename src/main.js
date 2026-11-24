@@ -133,7 +133,7 @@ const VIEWS=['home','ticketbox','performance','museum','merch','contact','admin'
 function go(v){ if(!VIEWS.includes(v)) v='home';
   if(v==='admin'&&!isAdmin()){ if(!me()) openAuth('login',()=>isAdmin()&&go('admin')); else toast('Admins only'); v='home' }
   $$('.view').forEach(x=>x.classList.toggle('active',x.id===v)); $$('#nav .tab').forEach(t=>t.classList.toggle('active',t.dataset.go===v));
-  if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); if(v!=='admin'&&adm.scanning){ stopScanner(); adm.scanning=false } if(v!=='museum') stopMic(); if(v==='admin') renderAdmin(); window.scrollTo({top:0,behavior:'smooth'}) }
+  if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); if(v!=='admin'&&adm.scanning){ stopScanner(); adm.scanning=false } if(v!=='museum') stopMic(); if(v==='admin') renderAdmin(); if(v==='performance') loadVlog(); window.scrollTo({top:0,behavior:'smooth'}) }
 addEventListener('hashchange',()=>go(location.hash.slice(1)));
 
 document.addEventListener('click',e=>{
@@ -150,11 +150,11 @@ const ACT={
   login:()=>openAuth('login'), signup:()=>openAuth('signup'), authmode:d=>setAuthMode(d.m), logout,
   chpw:()=>openAuth('password'), umenu:()=>$('#uMenu').classList.toggle('show'), tix:()=>openTix(),
   cancelmine:d=>run(async()=>{ await store.setTicketStatus(d.code,'cancelled'); toast('Ticket cancelled'); renderAll(); openTix() }),
-  vote:d=>{ if(!requireLogin(null,'Sign in to vote')) return; run(async()=>{ const added=await store.toggleVote(+d.v); if(added) toast('♥ Voted for '+ACTS.find(a=>a.id==d.v).name); renderPerf() }) },
+  vote:d=>{ if(!requireLogin(null,'Sign in to vote')) return; run(async()=>{ const added=await store.toggleVote(+d.v); if(added) toast('♥ Voted for '+ACTS.find(a=>a.id==d.v).name) }) },
   wish:d=>{ if(!requireLogin(null,'Log in to make your kit list')) return; run(async()=>{ await store.toggleWish(d.w); renderMerch() }) },
   swatch:d=>{ msel[d.m]=d.s; renderMerch() },
   /* admin */
-  admtab:d=>{ adm.tab=d.t; renderAdmin() },
+  admtab:d=>{ adm.tab=d.t; adm.q=''; renderAdmin(); if(d.t==='vlog') loadVlog() },
   lock:d=>run(async()=>{ const u=store.users().find(x=>x.id===d.u); if(!u) return; await store.setActive(u.id,!u.active); toast(u.active?'Account locked':'Account unlocked'); renderAdmin() }),
   resetpw:d=>run(async()=>{ const u=store.users().find(x=>x.id===d.u); if(!u) return; const pw=await store.resetPassword(u.id); adm.note=`Temporary password for @${u.u}: ${pw} — share it with them and ask them to change it.`; renderAdmin() }),
   deluser:d=>run(async()=>{ await store.deleteUser(d.u); toast('User deleted'); renderAll() }),
@@ -172,7 +172,23 @@ const ACT={
     const errs=await store.saveStock(map);
     toast(errs.length?'Stock must be at least the number given: '+errs.map(x=>`${MERCH.find(m=>m.n===x.item)?.label||x.item} ≥ ${x.min}`).join('; '):'✅ Merchandise stock updated'); renderAll() }),
   staffLogin:d=>{ $('#tixModal').classList.remove('show'); openAuth('login',()=>{ if(isAdmin()){ adm.tab='checkin'; adm.code=d.code; go('admin') } else toast('This account is not an admin') }) },
+  vcRmFile:d=>{ vc.files.splice(+d.i,1); renderComposer() },
+  vlogPost:()=>{ if(!requireLogin(null,'Log in to post a vlog')) return; const title=vc.title.trim(), id=ytId(vc.yt);
+    if(!title) return toast('Please add a title'); if(id===undefined) return toast('The YouTube link is not valid');
+    if(!id&&!vc.caption.trim()&&!vc.files.length) return toast('Add a YouTube link, some words or photos');
+    run(async()=>{ await store.vlogCreate({title,caption:vc.caption.trim(),yt:id,files:vc.files}); Object.assign(vc,{title:'',yt:'',caption:'',files:[]}); confetti(); toast('🎉 Your vlog is live!'); renderVlog() }) },
+  vlogImg:d=>{ $('#imgBig').src=d.src; $('#imgModal').classList.add('show') },
+  vlogEdit:d=>{ const p=vlogData().posts.find(x=>x.id==d.id); if(!p) return; ve={id:p.id,title:p.title,yt:p.yt?`https://youtu.be/${p.yt}`:'',caption:p.caption,keep:[...p.images],files:[],removed:[]}; if(location.hash!=='#performance') go('performance'); renderVlog(); setTimeout(()=>document.getElementById('vp-'+p.id)?.scrollIntoView({behavior:'smooth',block:'start'}),150) },
+  vlogCancel:()=>{ ve=null; renderVlog() },
+  veRmKeep:d=>{ ve.removed.push(...ve.keep.splice(+d.i,1)); renderVlog() },
+  veRmFile:d=>{ ve.files.splice(+d.i,1); renderVlog() },
+  vlogSave:d=>{ const title=ve.title.trim(), id=ytId(ve.yt); if(!title) return toast('Please add a title'); if(id===undefined) return toast('The YouTube link is not valid');
+    run(async()=>{ await store.vlogUpdate(+d.id,{title,caption:ve.caption.trim(),yt:id,keep:ve.keep,files:ve.files,removed:ve.removed}); ve=null; toast('✅ Vlog updated'); renderVlog(); if($('#admin').classList.contains('active')) renderAdmin() }) },
+  vlogDel:d=>run(async()=>{ await store.vlogDelete(+d.id); if(ve&&ve.id==d.id) ve=null; toast('Vlog deleted'); renderVlog(); if($('#admin').classList.contains('active')) renderAdmin() }),
+  cDel:d=>run(async()=>{ await store.commentDelete(+d.id); toast('Comment deleted'); renderVlog(); if($('#admin').classList.contains('active')) renderAdmin() }),
+  vlogOpen:d=>{ go('performance'); setTimeout(()=>{ const el=document.getElementById('vp-'+d.id); if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); el.animate([{boxShadow:'0 0 0 0 #ff5c8a'},{boxShadow:'0 0 0 6px #ff5c8a'},{boxShadow:'0 0 0 0 #ff5c8a'}],{duration:1200}) } },250) },
   scanToggle:()=>{ adm.scanErr=''; if(adm.scanning){ stopScanner(); adm.scanning=false } else adm.scanning=true; renderAdmin() },
+  vlogReload:()=>loadVlog(),
   scanNext:()=>{ adm.code=''; renderAdmin() },
   doCheckin:d=>run(async()=>{ await store.setTicketStatus(d.code,'checked'); confetti(); toast('✅ Checked in — give the passport, light stick and Sticker 1'); renderAll() }),
   resetdemo:()=>run(async()=>{ await store.resetEvent(); toast('All event data reset (admin accounts kept)'); renderAll() })
@@ -275,12 +291,71 @@ function openTix(){ if(!requireLogin(openTix,'Sign in to see your tickets')) ret
   $('#tixList').innerHTML=l.length?l.map(t=>ticketHTML(t,true)).join('<div style="height:16px"></div>'):`<div class="empty"><div style="font-size:52px">🎫</div><p>No tickets yet.</p><button class="btn primary" style="margin-top:12px" data-go="ticketbox" data-close>Reserve a free ticket</button></div>`;
   $('#uMenu')?.classList.remove('show'); $('#tixModal').classList.add('show') }
 
-/* ====== PERFORMANCE ====== */
-let genre='All';
-function renderPerf(){ const u=me()?.id;
-  $('#genres').innerHTML=['All',...ACTS.map(a=>a.genre)].map(g=>`<button class="cat ${g===genre?'on':''}" data-g="${g}">${g}</button>`).join(''); $$('#genres .cat').forEach(b=>b.onclick=()=>{genre=b.dataset.g;renderPerf()});
-  $('#lineup').innerHTML=ACTS.filter(a=>genre==='All'||a.genre===genre).map(a=>{ const l=store?store.votes(a.id):[]; return `<div class="act" id="act-${a.id}"><div class="head" style="--g:${a.g}"><span class="num">0${a.id}</span><small>${a.group} · ${a.genre}</small><h4>${a.name}</h4></div><div class="b"><p>${a.desc}</p><ul class="songs">${a.songs.map(s=>`<li><span>🎵 ${s[0]}</span><b>${s[1]}</b></li>`).join('')}</ul><div class="vote"><span style="font-size:13px;color:var(--ink2);font-weight:700">Audience vote</span><button class="heart ${u&&l.includes(u)?'on':''}" data-act="vote" data-v="${a.id}">♥ ${l.length}</button></div></div></div>` }).join('');
-  $('#runorder').innerHTML=RUN.map(r=>`<div class="tl" style="--c:${r[2]}"><b>${r[0]}</b><span>${r[1]}</span></div>`).join('') }
+/* ====== PERFORMANCE VLOG ====== */
+// YouTube link → 11-character video id. null = empty, undefined = not a YouTube link
+function ytId(raw){ const u=String(raw||'').trim(); if(!u) return null; if(/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+  try{ const x=new URL(/^https?:\/\//i.test(u)?u:'https://'+u), h=x.hostname.replace(/^(www|m|music)\./,'');
+    if(h==='youtu.be'){ const id=x.pathname.slice(1,12); if(/^[A-Za-z0-9_-]{11}$/.test(id)) return id }
+    if(/(^|\.)youtube(-nocookie)?\.com$/.test(h)){ const v=x.searchParams.get('v'); if(v&&/^[A-Za-z0-9_-]{11}$/.test(v)) return v; const m=x.pathname.match(/\/(embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/); if(m) return m[2] } }catch(e){}
+  return undefined }
+const ytFrame=id=>`<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+// Shrink large photos before upload (max 1600 px, JPEG); GIFs are kept as they are
+const MAX_IMG=6, MAX_BYTES=5*1024*1024;
+async function prepImage(f){ if(!/^image\/(jpeg|png|webp|gif)$/.test(f.type)) throw new Error(`${f.name}: only JPG, PNG, WebP or GIF images`);
+  if(f.type==='image/gif'){ if(f.size>MAX_BYTES) throw new Error(`${f.name}: GIF is larger than 5 MB`); return f }
+  const bmp=await createImageBitmap(f).catch(()=>null); if(!bmp) throw new Error(`${f.name}: cannot read this image`);
+  const k=Math.min(1,1600/Math.max(bmp.width,bmp.height)); if(k===1&&f.size<=1.5*1024*1024) return f;
+  const c=document.createElement('canvas'); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k); const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85)); if(!blob||blob.size>MAX_BYTES) throw new Error(`${f.name}: image is too large`);
+  return new File([blob],f.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}) }
+const vc={title:'',yt:'',caption:'',files:[]};          // new-vlog form
+let ve=null;                                              // vlog being edited (admin)
+const vlogData=()=>store?store.vlog():{posts:[],comments:[]};
+const imgUrl=p=>store.imageUrl(p);
+const canDelPost=p=>isAdmin()||(me()&&p.uid===me().id);
+const canDelComment=c=>isAdmin()||(me()&&c.uid===me().id);
+async function loadVlog(){ if(!store) return; try{ await store.vlogLoad() }catch(e){ toast('Could not load vlogs: '+e.message) } renderVlog(); if($('#admin').classList.contains('active')&&adm.tab==='vlog') renderAdmin() }
+function fileThumbs(files,kind){ return files.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt=""><button type="button" data-act="${kind}" data-i="${i}" aria-label="Remove">✕</button></div>`).join('') }
+function renderComposer(){ const box=$('#vlogComposer'); if(!box) return;
+  if(!me()){ box.innerHTML=`<div class="lock-card">🎥 <b>Share your vlog!</b> Log in to post a YouTube video, your story and photos, and to comment.<div style="margin-top:12px"><button class="btn primary sm" data-act="login">Log in</button> <button class="btn ghost sm" data-act="signup">Sign up</button></div></div>`; return }
+  const id=ytId(vc.yt);
+  box.innerHTML=`<h3 style="font-family:Fredoka;font-size:22px;margin-bottom:12px">✍️ Post a new vlog</h3>
+   <div class="field"><label>Title *</label><input id="vcTitle" maxlength="120" placeholder="e.g. Our mashup on stage" value="${esc(vc.title)}"></div>
+   <div class="field"><label>YouTube link</label><input id="vcYt" placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/…" value="${esc(vc.yt)}"><small id="vcYtMsg" style="font-weight:700;color:${id===undefined?'#d6285a':'var(--mint)'}">${id===undefined?'This is not a YouTube video link':id?'✓ Video found':''}</small></div>
+   <div id="vcPrev">${id?ytFrame(id):''}</div>
+   <div class="field"><label>Your words (lời dẫn)</label><textarea id="vcCap" rows="4" maxlength="3000" placeholder="Tell the story of this moment…">${esc(vc.caption)}</textarea></div>
+   <div class="field"><label>Photos (up to ${MAX_IMG})</label><label class="drop" for="vcFiles">📷 Choose photos</label><input id="vcFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden><div class="thumbs">${fileThumbs(vc.files,'vcRmFile')}</div></div>
+   <div class="actions"><span style="font-size:13px;color:var(--ink2)">Posting as <b>${esc(me().name)}</b> · please only share photos of people who agreed to be photographed</span><button class="btn primary" data-act="vlogPost">🚀 Post vlog</button></div>`;
+  $('#vcTitle').oninput=e=>vc.title=e.target.value; $('#vcCap').oninput=e=>vc.caption=e.target.value;
+  $('#vcYt').oninput=e=>{ vc.yt=e.target.value; const id=ytId(vc.yt); $('#vcYtMsg').textContent=id===undefined?'This is not a YouTube video link':id?'✓ Video found':''; $('#vcYtMsg').style.color=id===undefined?'#d6285a':'var(--mint)'; $('#vcPrev').innerHTML=id?ytFrame(id):'' };
+  $('#vcFiles').onchange=e=>addFiles(e.target,vc.files,()=>renderComposer()) }
+async function addFiles(input,list,done,already=0){ const picked=[...input.files]; input.value='';
+  for(const f of picked){ if(list.length+already>=MAX_IMG){ toast(`Up to ${MAX_IMG} photos per vlog`); break }
+    try{ const p=await prepImage(f); list.push(Object.assign(p,{url:URL.createObjectURL(p)})) }catch(e){ toast(e.message) } }
+  done() }
+function postHTML(p){ const cm=vlogData().comments.filter(c=>c.postId===p.id), editing=ve&&ve.id===p.id;
+  const head=`<header><span class="av">${esc((p.author||'?')[0].toUpperCase())}</span><div><b>${esc(p.author||'Deleted user')}</b><br><small>${esc(p.cls)||''}${p.cls?' · ':''}${fmtDate(p.at)}${p.edited?' · edited by admin':''}</small></div>
+    <div class="acts">${isAdmin()&&!editing?`<button class="btn ghost xs" data-act="vlogEdit" data-id="${p.id}">✏️ Edit</button>`:''}${canDelPost(p)&&!editing?`<button class="btn danger xs" data-act="vlogDel" data-id="${p.id}" data-confirm="Tap again to delete">🗑 Delete</button>`:''}</div></header>`;
+  if(editing){ const id=ytId(ve.yt);
+    return `<article class="vpost" id="vp-${p.id}">${head}
+     <div class="field"><label>Title *</label><input id="veTitle" maxlength="120" value="${esc(ve.title)}"></div>
+     <div class="field"><label>YouTube link</label><input id="veYt" value="${esc(ve.yt)}"><small id="veYtMsg" style="font-weight:700;color:${id===undefined?'#d6285a':'var(--mint)'}">${id===undefined?'Not a YouTube video link':id?'✓ Video found':'No video'}</small></div>
+     <div class="field"><label>Lời dẫn</label><textarea id="veCap" rows="4" maxlength="3000">${esc(ve.caption)}</textarea></div>
+     <div class="field"><label>Photos</label><div class="thumbs">${ve.keep.map((path,i)=>`<div class="thumb"><img src="${esc(imgUrl(path))}" alt=""><button type="button" data-act="veRmKeep" data-i="${i}" aria-label="Remove">✕</button></div>`).join('')}${fileThumbs(ve.files,'veRmFile')}</div>
+      <label class="drop" for="veFiles" style="margin-top:8px">📷 Add photos</label><input id="veFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></div>
+     <div class="actions"><button class="btn ghost" data-act="vlogCancel">Cancel</button><button class="btn primary" data-act="vlogSave" data-id="${p.id}">💾 Save changes</button></div></article>` }
+  const n=p.images.length;
+  return `<article class="vpost" id="vp-${p.id}">${head}<h3>${esc(p.title)}</h3>${p.yt?ytFrame(p.yt):''}${p.caption?`<p class="vcap">${esc(p.caption)}</p>`:''}
+   ${n?`<div class="vimgs n${Math.min(n,4)}">${p.images.map(path=>`<button data-act="vlogImg" data-src="${esc(imgUrl(path))}"><img src="${esc(imgUrl(path))}" alt="Photo from ${esc(p.title)}" loading="lazy"></button>`).join('')}</div>`:''}
+   <div class="vcomments"><b style="font-size:14px">💬 ${cm.length} comment${cm.length===1?'':'s'}</b>
+    ${cm.map(c=>`<div class="vcomment"><span class="av">${esc((c.author||'?')[0].toUpperCase())}</span><div class="bubble"><b style="font-size:14px">${esc(c.author||'Deleted user')}</b> <small>${esc(c.cls)||''} · ${fmtDate(c.at)}</small><p>${esc(c.body)}</p></div>${canDelComment(c)?`<button class="btn ghost xs" style="align-self:center" data-act="cDel" data-id="${c.id}" data-confirm="Delete?" title="Delete comment">🗑</button>`:''}</div>`).join('')}
+    ${me()?`<form class="cform" data-post="${p.id}"><input maxlength="1000" placeholder="Write a comment…" aria-label="Write a comment"><button class="btn primary xs" type="submit">Send</button></form>`:`<p style="font-size:13px;color:var(--ink2);margin-top:6px"><a href="#" data-act="login">Log in</a> to comment.</p>`}</div></article>` }
+function renderVlog(){ renderComposer(); const box=$('#vlogFeed'); if(!box) return; const P=vlogData().posts;
+  $('#vlogCount').textContent=P.length?`${P.length} vlog${P.length>1?'s':''}`:'';
+  box.innerHTML=P.length?P.map(postHTML).join(''):`<div class="empty panel"><div style="font-size:52px">🎬</div><p>No vlogs yet — be the first to share a video or photos from the concert!</p></div>`;
+  $$('#vlogFeed .cform').forEach(f=>f.onsubmit=e=>{ e.preventDefault(); const inp=f.querySelector('input'), body=inp.value.trim(); if(!body) return;
+    run(async()=>{ await store.commentAdd(+f.dataset.post,body); renderVlog(); const nf=$(`#vlogFeed .cform[data-post="${f.dataset.post}"] input`); nf&&nf.focus() }) });
+  if(ve){ const t=$('#veTitle'); if(t){ t.oninput=e=>ve.title=e.target.value; $('#veCap').oninput=e=>ve.caption=e.target.value; $('#veYt').oninput=e=>{ ve.yt=e.target.value; const id=ytId(ve.yt), m=$('#veYtMsg'); m.textContent=id===undefined?'Not a YouTube video link':id?'✓ Video found':'No video'; m.style.color=id===undefined?'#d6285a':'var(--mint)' }; $('#veFiles').onchange=e=>addFiles(e.target,ve.files,renderVlog,ve.keep.length) } } }
 
 /* Sing & Fill */
 let sfDone=null;
@@ -379,9 +454,9 @@ const kpi=(l,v,s,p)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><
 const pct=(a,b)=>b?a/b*100:0;
 function renderAdmin(){ if(!isAdmin()) return;
   if(adm.tab!=='checkin'&&adm.scanning){ stopScanner(); adm.scanning=false }
-  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['quiz','❓ Activity results'],['merch','🛍️ Concert kit']];
+  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['quiz','❓ Activity results'],['vlog','🎬 Vlog review'],['merch','🛍️ Concert kit']];
   $('#admTabs').innerHTML=tabs.map(t=>`<button class="cat ${adm.tab===t[0]?'on':''}" data-act="admtab" data-t="${t[0]}">${t[1]}</button>`).join('');
-  $('#admBody').innerHTML=({checkin:admCheckin,overview:admOverview,users:admUsers,tickets:admTickets,quiz:admQuiz,merch:admMerch})[adm.tab]();
+  $('#admBody').innerHTML=({checkin:admCheckin,overview:admOverview,users:admUsers,tickets:admTickets,quiz:admQuiz,vlog:admVlog,merch:admMerch})[adm.tab]();
   if(adm.tab==='checkin') bindCheckin() }
 
 const userTickets=uid=>store.tickets().filter(t=>t.uid===uid&&t.evId==='main');
@@ -427,7 +502,6 @@ function admOverview(){
     ${kpi('Concert kit handed out',given,`of ${stock} in stock · ${wishes} kit-list requests`,pct(given,stock))}
   </div>
   ${BOOKABLE.map(e=>`<div class="apanel"><h3>${e.t} — tickets by type</h3><div class="bars">${TYPES.map(t=>{ const i=issued(e.id,t.id),c=cap(e.id,t.id); return `<div class="bar-row" title="${t.name}: ${i} of ${c}"><span>${t.em} ${t.name}</span>${meter(pct(i,c))}<span class="num">${i}/${c}</span></div>` }).join('')}</div></div>`).join('')}
-  <div class="apanel"><h3>Audience votes</h3><div class="bars">${ACTS.map(a=>{ const n=store.votes(a.id).length, mx=Math.max(1,...ACTS.map(x=>store.votes(x.id).length)); return `<div class="bar-row" title="${a.name}: ${n} votes"><span>${a.name}</span>${meter(pct(n,mx))}<span class="num">${n}</span></div>` }).join('')}</div></div>
   <div class="apanel"><h3>Danger zone</h3><p style="font-size:14px;color:var(--ink2);margin-bottom:10px">Clear all tickets, activity results, votes, kit lists, user accounts (admins are kept) and reset stock — e.g. after a rehearsal run. Do not use on concert day.</p><button class="btn danger xs" data-act="resetdemo" data-confirm="Tap again to reset everything">Reset event data</button></div>` }
 
 function admUsers(){ const q=adm.q.toLowerCase(), self=me().id, ALLU=store.users(), TK=store.tickets(), QZ=store.quiz();
@@ -475,6 +549,17 @@ function admQuiz(){ const A=store.quiz(), by=k=>A.filter(a=>a.total===k), sfA=by
    ${adm.open[k]?`<tr class="detail"><td colspan="6">${detail(a)}</td></tr>`:''}`).join('')||'<tr><td colspan="6" class="empty">No results yet</td></tr>'}
   </tbody></table></div>` }
 
+function admVlog(){ const {posts,comments}=vlogData(), q=adm.q.toLowerCase(), P=posts.filter(p=>!q||(p.title+' '+p.author+' '+p.caption).toLowerCase().includes(q));
+  return `<div class="kpis">${kpi('Vlogs',posts.length,`${posts.filter(p=>p.yt).length} with a YouTube video`)}${kpi('Photos',posts.reduce((a,p)=>a+p.images.length,0),'uploaded')}${kpi('Comments',comments.length,'on all vlogs')}</div>
+  <div class="apanel"><div class="toolbar"><h3 style="margin:0">All vlogs (${P.length})</h3><input data-chg="admq" placeholder="Search title, author, words…" value="${esc(adm.q)}" style="margin-left:auto"><button class="btn ghost xs" data-act="vlogReload">↻ Refresh</button></div>
+  <table class="t"><thead><tr><th>Posted</th><th>Title</th><th>Author</th><th>Video</th><th>Photos</th><th>Comments</th><th>Actions</th></tr></thead><tbody>
+  ${P.map(p=>`<tr><td>${fmtDate(p.at)}</td><td><b>${esc(p.title)}</b>${p.caption?`<br><small style="color:var(--ink2)">${esc(p.caption.slice(0,80))}${p.caption.length>80?'…':''}</small>`:''}</td><td>${esc(p.author)}<br><small style="color:var(--ink2)">${esc(p.cls)}</small></td><td>${p.yt?`<a href="https://youtu.be/${p.yt}" target="_blank" rel="noopener">▶ ${p.yt}</a>`:'—'}</td><td class="num">${p.images.length}</td><td class="num">${comments.filter(c=>c.postId===p.id).length}</td>
+   <td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost xs" data-act="vlogOpen" data-id="${p.id}">View</button><button class="btn ghost xs" data-act="vlogEdit" data-id="${p.id}">✏️ Edit</button><button class="btn danger xs" data-act="vlogDel" data-id="${p.id}" data-confirm="Sure?">🗑 Delete</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No vlogs yet</td></tr>'}
+  </tbody></table></div>
+  <div class="apanel"><h3>Latest comments</h3><table class="t"><thead><tr><th>When</th><th>Author</th><th>On vlog</th><th>Comment</th><th></th></tr></thead><tbody>
+  ${[...comments].reverse().slice(0,100).map(c=>`<tr><td>${fmtDate(c.at)}</td><td>${esc(c.author)}<br><small style="color:var(--ink2)">${esc(c.cls)}</small></td><td>${esc(posts.find(p=>p.id===c.postId)?.title||'—')}</td><td style="max-width:360px;white-space:pre-wrap">${esc(c.body)}</td><td><button class="btn danger xs" data-act="cDel" data-id="${c.id}" data-confirm="Delete?">🗑</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No comments yet</td></tr>'}
+  </tbody></table></div>` }
+
 function admMerch(){ const totalS=MERCH.reduce((a,m)=>a+merchInv(m.n).stock,0), totalG=MERCH.reduce((a,m)=>a+merchInv(m.n).given,0);
   const wishers=n=>Object.entries(store.wishAll()).filter(([u,l])=>l.includes(n)).map(([u])=>u);
   return `<div class="kpis">${kpi('Total stock',totalS,'items across the collection')}${kpi('Given out',totalG,`${Math.round(pct(totalG,totalS))}% of stock`,pct(totalG,totalS))}${kpi('Remaining',totalS-totalG,'items left to give')}</div>
@@ -486,16 +571,16 @@ function admMerch(){ const totalS=MERCH.reduce((a,m)=>a+merchInv(m.n).stock,0), 
   </tbody></table><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px"><small style="color:var(--ink2)">Use +1 at the check-in desk each time an item is handed out (− when a light stick comes back). "Give" also clears it from that guest's kit list.</small><button class="btn primary xs" data-act="savestock">💾 Save stock</button></div></div>` }
 
 /* ====== SEARCH ====== */
-const INDEX=[...ACTS.map(a=>({t:a.name,s:a.group+' · '+a.genre,i:'🎤',go:'performance',el:'act-'+a.id})),...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'My stickers',i:'🏅',go:'museum',hall:'h-pass'},{t:'Sing & Fill',s:'Sticker 2',i:'🎶',go:'performance',el:'singfill'},...MERCH.map((m,i)=>({t:m.label,s:'Concert kit · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
+const INDEX=[{t:'Performance Vlog',s:'Videos, photos & comments',i:'🎬',go:'performance'},...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'My stickers',i:'🏅',go:'museum',hall:'h-pass'},{t:'Sing & Fill',s:'Sticker 2',i:'🎶',go:'museum',hall:'h-sing'},...MERCH.map((m,i)=>({t:m.label,s:'Concert kit · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
 $('#q').oninput=e=>{ const v=e.target.value.trim().toLowerCase(), r=$('#results'); if(!v){ r.classList.remove('show'); return }
   const hits=INDEX.filter(x=>(x.t+' '+x.s).toLowerCase().includes(v)).slice(0,7);
   r.innerHTML=hits.length?hits.map((h,k)=>`<button data-h="${k}"><span>${h.i}</span><span>${h.t}<br><small>${h.s}</small></span></button>`).join(''):'<div style="padding:12px 16px;color:var(--ink2)">No results</div>'; r.classList.add('show');
   $$('#results [data-h]').forEach(b=>b.onclick=()=>{ const h=hits[+b.dataset.h]; r.classList.remove('show'); $('#q').value=''; go(h.go); if(h.ev) pickEvent(h.ev);
-    if(h.hall) $(`#halls [data-hall="${h.hall}"]`).click(); if(h.go==='performance'){ genre='All'; renderPerf() } if(h.go==='merch'){ mcat='All'; renderMerch() }
+    if(h.hall) $(`#halls [data-hall="${h.hall}"]`).click();  if(h.go==='merch'){ mcat='All'; renderMerch() }
     if(h.el) setTimeout(()=>{ const el=document.getElementById(h.el); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.animate([{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:600}) } },350) }) };
 
 /* ====== START ====== */
-function renderAll(){ renderHeader(); renderNb(); renderEvents(); renderTB(); renderPerf(); renderMerch(); renderPassport(); if($('#admin').classList.contains('active')) renderAdmin() }
+function renderAll(){ renderHeader(); renderNb(); renderEvents(); renderTB(); renderVlog(); renderMerch(); renderPassport(); if($('#admin').classList.contains('active')) renderAdmin() }
 // A ticket QR opens  <site>/?ticket=CODE  — staff (admin) go straight to check-in; guests see their ticket.
 async function openTicketLink(code){ history.replaceState(null,'',location.pathname+(location.hash||'#home'));
   if(isAdmin()){ adm.tab='checkin'; adm.code=code; go('admin'); return }
@@ -511,7 +596,7 @@ async function openTicketLink(code){ history.replaceState(null,'',location.pathn
   if(store?.mode==='unconfigured'){ const bar=document.createElement('div'); bar.setAttribute('role','alert');
     bar.style.cssText='background:#2b2350;color:#ffc93c;text-align:center;padding:10px 16px;font-weight:700;font-size:14px';
     bar.textContent='⚠️ '+NOT_CONFIGURED_MESSAGE; document.body.prepend(bar) }
-  renderQuiz(); renderSingFill(); renderAll(); go(location.hash.slice(1)||'home');
+  renderQuiz(); renderSingFill(); renderAll(); loadVlog(); go(location.hash.slice(1)||'home');
   const tk=findCode(new URLSearchParams(location.search).get('ticket')); if(tk) await openTicketLink(tk);
   // keep numbers fresh when the tab is shown again (e.g. admin dashboard on the entrance laptop)
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&store&&!busy) store.refresh().then(renderAll).catch(()=>{}) });
