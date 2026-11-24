@@ -36,7 +36,7 @@ function unconfiguredStore() {
     me: () => null, users: () => [],
     cap: (ev, t) => DEFAULT_CAPACITY[ev]?.[t] ?? 0, issued: () => 0, taken: () => new Set(),
     tickets: () => [], myTickets: () => [], quiz: () => [], myQuiz: () => [], votes: () => [], myWish: () => [], wishAll: () => ({}),
-    merch: n => ({ stock: DEFAULT_STOCK[n] ?? 0, given: 0 }),
+    merch: n => ({ stock: DEFAULT_STOCK[n] ?? 0, given: 0, requested: 0, images: [] }), merchImageUrl: p => p, setMerchImages: no,
     login: no, signup: no, logout: async () => { }, changePassword: no,
     book: no, setTicketStatus: no, getTicketByCode: no, vlogLoad: async () => ({ posts: [], comments: [] }), vlog: () => ({ posts: [], comments: [] }), imageUrl: p => p, vlogCreate: no, vlogUpdate: no, vlogDelete: no, commentAdd: no, commentDelete: no, toggleVote: no, toggleWish: no, saveQuiz: no,
     setRole: no, setActive: no, resetPassword: no, deleteUser: no, addUser: no,

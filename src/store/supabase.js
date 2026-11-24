@@ -44,7 +44,7 @@ export function createSupabaseStore(url, anonKey) {
     const next = emptyState();
     const [avail, merch, votes, prof] = await Promise.all([
       sb.rpc('ticket_availability'),
-      sb.from('merch_inventory').select('*'),
+      sb.rpc('merch_availability'),
       sb.from('votes').select('act_id,user_id'),
       session ? sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
@@ -52,7 +52,7 @@ export function createSupabaseStore(url, anonKey) {
       (next.inv[r.event_id] ??= {})[r.type_id] = r.capacity;
       (next.avail[r.event_id] ??= {})[r.type_id] = { issued: r.issued, seats: r.seats || [] };
     });
-    ok(merch).forEach(m => { next.merch[m.item] = { stock: m.stock, given: m.given } });
+    ok(merch).forEach(m => { next.merch[m.item] = { stock: m.stock, given: m.given, requested: m.requested || 0, images: m.images || [] } });
     ok(votes).forEach(v => { (next.votes[v.act_id] ??= []).push(v.user_id) });
     const p = ok(prof);
     if (session && (!p || !p.active)) { await sb.auth.signOut({ scope: 'local' }); S = next; if (p && !p.active) fail('This account is locked. Please contact the admin.'); return }
@@ -115,7 +115,21 @@ export function createSupabaseStore(url, anonKey) {
     votes: id => S.votes[id] || [],
     myWish: () => S.myWish,
     wishAll: () => S.wishAll,
-    merch: n => S.merch[n] || { stock: 0, given: 0 },
+    merch: n => S.merch[n] || { stock: 0, given: 0, requested: 0, images: [] },
+    merchImageUrl: path => sb.storage.from('merch-images').getPublicUrl(path).data.publicUrl,
+    async setMerchImages(item, { keep, files, removed }) {
+      const slug = item.toLowerCase().replace(/[^a-z0-9]+/g, '-'), added = [];
+      for (const f of files) {
+        const path = `items/${slug}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extOf(f)}`;
+        const { error } = await sb.storage.from('merch-images').upload(path, f, { contentType: f.type, upsert: false });
+        if (error) { if (added.length) await sb.storage.from('merch-images').remove(added); fail('Photo upload failed: ' + error.message) }
+        added.push(path);
+      }
+      const { error } = await sb.rpc('set_merch_images', { p_item: item, p_images: [...keep, ...added] });
+      if (error) { if (added.length) await sb.storage.from('merch-images').remove(added); fail(error.message) }
+      if (removed.length) await sb.storage.from('merch-images').remove(removed);
+      await load();
+    },
 
     async login(un, pw) {
       const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(un), password: pw });

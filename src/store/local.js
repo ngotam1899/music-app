@@ -69,7 +69,13 @@ export const localStore = {
   votes: id => DB.votes[id] || [],
   myWish: () => { const u = curRaw(); return u ? (DB.wish[u.u] || []) : [] },
   wishAll: () => curRaw()?.role === 'admin' ? DB.wish : {},
-  merch: n => DB.inv.merch[n],
+  merch: n => { const m = DB.inv.merch[n] || { stock: 0, given: 0 }; return { ...m, images: m.images || [], requested: Object.values(DB.wish).filter(l => l.includes(n)).length } },
+  merchImageUrl: path => path,
+  async setMerchImages(item, { keep, files }) {
+    requireAdmin(); const m = DB.inv.merch[item] || fail('Unknown item');
+    const imgs = [...keep, ...(await Promise.all(files.map(toDataUrl)))]; if (imgs.length > 4) fail('Up to 4 photos per product');
+    m.images = imgs; save();
+  },
 
   async login(un, pw) {
     const u = DB.users.find(x => x.u === un);
@@ -136,7 +142,8 @@ export const localStore = {
   },
   async toggleWish(item) {
     const u = requireUser().u, l = DB.wish[u] || (DB.wish[u] = []), i = l.indexOf(item);
-    if (i >= 0) l.splice(i, 1); else l.push(item); save();
+    if (i >= 0) l.splice(i, 1); else { const m = localStore.merch(item); if (m.given + m.requested >= m.stock) fail(`Sorry, ${item} is out of stock`); l.push(item) }
+    save();
   },
   async saveQuiz(r) { const u = requireUser(); DB.quiz.unshift({ ...r, u: u.u, name: u.name, cls: u.cls, at: Date.now() }); save() },
 

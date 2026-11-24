@@ -73,10 +73,10 @@ const LAB=[['Input (đầu vào)',['sound','light'],0],['Processing (xử lí)',
 const KIND={6:'Sing & Fill',3:'Physics Quiz',4:'Digital Stage Lab',1:'Try & Answer',2:'Photo'};
 // Concert kit (labels shown for the existing stock items in the database)
 const MERCH=[
- {n:'Light stick',label:'Light stick (borrowed)',c:'Light',stock:80,bgc:'#e0f3ff',d:'LED module in a recycled plastic tube with colour film. Switch on and wave when the screen says so — please return it after the show.',sw:['#3fa9f5','#ffc93c','#ff5c8a'],svg:c=>`<rect x="72" y="70" width="16" height="60" rx="6" fill="#2b2350"/><circle cx="80" cy="50" r="30" fill="${c}" opacity=".9"/><circle cx="80" cy="50" r="40" fill="${c}" opacity=".2"/><text x="80" y="57" text-anchor="middle" font-size="20">♪</text>`},
- {n:'Name badge',label:'Concert Passport',c:'Paper',stock:80,bgc:'#f1ebff',d:'A4 folded into 4 bilingual A5 pages with 6 sticker boxes. Numbered, Blue or Yellow for your Backstage Tour round.',sw:['#3fa9f5','#ffc93c'],svg:c=>`<rect x="40" y="20" width="80" height="110" rx="8" fill="${c}" stroke="#2b2350" stroke-width="2"/><text x="80" y="62" text-anchor="middle" font-family="Fredoka" font-size="13" fill="#2b2350">CONCERT</text><text x="80" y="80" text-anchor="middle" font-family="Fredoka" font-size="13" fill="#2b2350">PASSPORT</text><text x="80" y="108" text-anchor="middle" font-size="18">♫</text>`},
- {n:'Sticker set',label:'Passport stickers',c:'Paper',stock:100,bgc:'#fff1c9',d:'1 Check-in · 2 Sing & Fill · 3 Photo · 4 Try & Answer · 5 Physics Quiz · 6 Digital Stage — plus ★ Bonus.',sw:['#ffc93c','#2ec4a6'],svg:c=>`<rect x="35" y="25" width="90" height="100" rx="12" fill="#fff" stroke="#2b2350" stroke-width="2"/><circle cx="60" cy="52" r="14" fill="${c}"/><circle cx="100" cy="52" r="14" fill="#ff5c8a"/><circle cx="60" cy="96" r="14" fill="#8b6cf6"/><circle cx="100" cy="96" r="14" fill="${c}"/>`},
- {n:'Tote bag',label:'VIP water bottle',c:'VIP',stock:40,bgc:'#dcfbf2',d:'A small thank-you for VIP guests (3 notebooks), served by the 10C9 VIP team.',sw:['#2ec4a6','#3fa9f5'],svg:c=>`<rect x="66" y="22" width="28" height="14" rx="4" fill="#2b2350"/><path d="M60 40 Q60 34 66 34 L94 34 Q100 34 100 40 L104 128 Q104 134 98 134 L62 134 Q56 134 56 128Z" fill="${c}" opacity=".85" stroke="#2b2350" stroke-width="2"/><rect x="60" y="70" width="40" height="26" fill="#fff" opacity=".8"/><text x="80" y="88" text-anchor="middle" font-family="Fredoka" font-size="11" fill="#2b2350">VIP</text>`}
+ {n:'Light stick',label:'Light stick',c:'Light',stock:80,bgc:'#e0f3ff',d:'LED light in a recycled plastic tube with colour film. Wave it with the music!',sw:['#3fa9f5','#ffc93c','#ff5c8a'],svg:c=>`<rect x="72" y="70" width="16" height="60" rx="6" fill="#2b2350"/><circle cx="80" cy="50" r="30" fill="${c}" opacity=".9"/><circle cx="80" cy="50" r="40" fill="${c}" opacity=".2"/><text x="80" y="57" text-anchor="middle" font-size="20">♪</text>`},
+ {n:'Bookmark',label:'Bookmark',c:'Paper',stock:120,bgc:'#ffe9de',d:'A music-note bookmark from 10C9 — a little thank-you for every notebook.',sw:['#ff8a5c','#2ec4a6'],svg:c=>`<rect x="62" y="15" width="36" height="115" rx="6" fill="${c}" stroke="#2b2350" stroke-width="2"/><circle cx="80" cy="30" r="5" fill="#fff"/><text x="80" y="85" text-anchor="middle" font-size="26" fill="#fff">♫</text>`},
+ {n:'Concert T-shirt',label:'T-shirt',c:'Wear',stock:50,bgc:'#ffe3ec',d:'Cotton T-shirt with the "Music for Change" logo, designed by 10C9.',sw:['#ff5c8a','#2b2350','#ffffff'],svg:c=>`<path d="M45 30 L70 20 Q80 32 90 20 L115 30 L135 55 L115 65 L115 125 L45 125 L45 65 L25 55Z" fill="${c}" stroke="#2b2350" stroke-width="2"/><text x="80" y="82" text-anchor="middle" font-family="Fredoka" font-size="13" fill="${c==='#2b2350'?'#ffc93c':'#2b2350'}">10C9 ♪</text>`},
+ {n:'Sticker set',label:'Stickers',c:'Paper',stock:100,bgc:'#fff1c9',d:'A set of cute music stickers drawn by 10C9.',sw:['#ffc93c','#2ec4a6'],svg:c=>`<rect x="35" y="25" width="90" height="100" rx="12" fill="#fff" stroke="#2b2350" stroke-width="2"/><circle cx="60" cy="52" r="14" fill="${c}"/><circle cx="100" cy="52" r="14" fill="#ff5c8a"/><circle cx="60" cy="96" r="14" fill="#8b6cf6"/><circle cx="100" cy="96" r="14" fill="${c}"/>`}
 ];
 
 /* ====== DATA (Supabase in production, browser storage in demo mode) ====== */
@@ -87,8 +87,9 @@ const cap=(ev,t)=>store?store.cap(ev,t):0;
 const issued=(ev,t)=>store?store.issued(ev,t):0;
 const left=(ev,t)=>Math.max(0,cap(ev,t)-issued(ev,t));
 const takenSeats=ev=>store?store.taken(ev):new Set();
-const merchInv=n=>store?store.merch(n):{stock:0,given:0};
-const merchLeft=n=>Math.max(0,merchInv(n).stock-merchInv(n).given);
+const merchInv=n=>store?store.merch(n):{stock:0,given:0,requested:0,images:[]};
+const merchLeft=n=>{ const m=merchInv(n); return Math.max(0,m.stock-m.given-(m.requested||0)) };
+const merchImg=p=>store.merchImageUrl(p);
 const myTickets=()=>store?store.myTickets():[];
 const userName=id=>store.users().find(u=>u.id===id)?.u||'deleted user';
 let busy=false;
@@ -151,7 +152,7 @@ const ACT={
   chpw:()=>openAuth('password'), umenu:()=>$('#uMenu').classList.toggle('show'), tix:()=>openTix(),
   cancelmine:d=>run(async()=>{ await store.setTicketStatus(d.code,'cancelled'); toast('Ticket cancelled'); renderAll(); openTix() }),
   vote:d=>{ if(!requireLogin(null,'Sign in to vote')) return; run(async()=>{ const added=await store.toggleVote(+d.v); if(added) toast('♥ Voted for '+ACTS.find(a=>a.id==d.v).name) }) },
-  wish:d=>{ if(!requireLogin(null,'Log in to make your kit list')) return; run(async()=>{ await store.toggleWish(d.w); renderMerch() }) },
+  wish:d=>{ if(!requireLogin(null,'Log in to select items')) return; run(async()=>{ const had=store.myWish().includes(d.w); await store.toggleWish(d.w); toast(had?'Removed from your selection':'✓ Added to your selection (1)'); renderMerch() }) },
   swatch:d=>{ msel[d.m]=d.s; renderMerch() },
   /* admin */
   admtab:d=>{ adm.tab=d.t; adm.q=''; renderAdmin(); if(d.t==='vlog') loadVlog() },
@@ -167,7 +168,7 @@ const ACT={
   tkstatus:d=>run(async()=>{ await store.setTicketStatus(d.code,d.s); renderAll() }),
   qdetail:d=>{ adm.open[d.i]=!adm.open[d.i]; renderAdmin() },
   give:d=>run(async()=>{ await store.giveMerch(d.n,+d.d); renderAll() }),
-  givewish:d=>run(async()=>{ await store.giveMerch(d.n,1,d.u); toast(`🎁 ${MERCH.find(m=>m.n===d.n)?.label||d.n} given to @${userName(d.u)}`); renderAll() }),
+  givewish:d=>run(async()=>{ await store.giveMerch(d.n,1,d.u); toast(`🎁 ${MERCH.find(m=>m.n===d.n)?.label||d.n} handed to @${userName(d.u)}`); renderAll() }),
   savestock:()=>run(async()=>{ const map={}; MERCH.forEach((m,i)=>{ map[m.n]=Math.floor(+$(`#stk-${i}`).value) });
     const errs=await store.saveStock(map);
     toast(errs.length?'Stock must be at least the number given: '+errs.map(x=>`${MERCH.find(m=>m.n===x.item)?.label||x.item} ≥ ${x.min}`).join('; '):'✅ Merchandise stock updated'); renderAll() }),
@@ -189,12 +190,17 @@ const ACT={
   vlogOpen:d=>{ go('performance'); setTimeout(()=>{ const el=document.getElementById('vp-'+d.id); if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); el.animate([{boxShadow:'0 0 0 0 #ff5c8a'},{boxShadow:'0 0 0 6px #ff5c8a'},{boxShadow:'0 0 0 0 #ff5c8a'}],{duration:1200}) } },250) },
   scanToggle:()=>{ adm.scanErr=''; if(adm.scanning){ stopScanner(); adm.scanning=false } else adm.scanning=true; renderAdmin() },
   vlogReload:()=>loadVlog(),
+  mImgDel:d=>run(async()=>{ const cur=[...(merchInv(d.n).images||[])], removed=cur.splice(+d.i,1); await store.setMerchImages(d.n,{keep:cur,files:[],removed}); toast('Photo removed'); renderAll() }),
   scanNext:()=>{ adm.code=''; renderAdmin() },
   doCheckin:d=>run(async()=>{ await store.setTicketStatus(d.code,'checked'); confetti(); toast('✅ Checked in — give the passport, light stick and Sticker 1'); renderAll() }),
   resetdemo:()=>run(async()=>{ await store.resetEvent(); toast('All event data reset (admin accounts kept)'); renderAll() })
 };
 const CHG={
   setrole:c=>run(async()=>{ const u=store.users().find(x=>x.id===c.dataset.u); if(!u) return; try{ await store.setRole(u.id,c.value); toast(`@${u.u} is now ${c.value==='admin'?'an Admin':'a User'}`) } finally{ renderAdmin() } }),
+  merchPhoto:c=>{ const item=c.dataset.n, files=[...c.files]; c.value=''; if(!files.length) return; const cur=merchInv(item).images||[];
+    if(cur.length+files.length>4){ toast('Up to 4 photos per product'); files.length=Math.max(0,4-cur.length) }
+    run(async()=>{ const prepped=[]; for(const f of files){ try{ prepped.push(await prepImage(f)) }catch(e){ toast(e.message) } } if(!prepped.length) return;
+      await store.setMerchImages(item,{keep:cur,files:prepped,removed:[]}); toast('📷 Photo added'); renderAll() }) },
   admev:c=>{ adm.ev=c.value; renderAdmin() },
   admq:c=>{ adm.q=c.value; renderAdmin() }
 };
@@ -437,10 +443,15 @@ function renderPassport(){ const box=$('#passport'); if(!box) return; const u=me
 
 /* ====== MERCH ====== */
 let mcat='All'; const msel={};
-function renderMerch(){ const wish=store?store.myWish():[];
-  $('#mcats').innerHTML=['All','Light','Paper','VIP'].map(c=>`<button class="cat ${c===mcat?'on':''}" data-c="${c}">${c}</button>`).join('')+`<span class="cat" style="margin-left:auto;cursor:default">🎒 My kit list: ${wish.length}</span>`;
+function renderMerch(){ const sel=store?store.myWish():[], mine=MERCH.filter(m=>sel.includes(m.n)).length;
+  $('#mcats').innerHTML=['All','Wear','Light','Paper'].map(c=>`<button class="cat ${c===mcat?'on':''}" data-c="${c}">${c}</button>`).join('')+`<span class="cat" style="margin-left:auto;cursor:default">🛒 My selection: ${mine}/${MERCH.length}</span>`;
   $$('#mcats [data-c]').forEach(b=>b.onclick=()=>{mcat=b.dataset.c;renderMerch()});
-  $('#mgrid').innerHTML=MERCH.map((m,i)=>({m,i})).filter(({m})=>mcat==='All'||m.c===mcat).map(({m,i})=>{ const col=msel[i]??m.sw[0], inW=wish.includes(m.n), l=merchLeft(m.n); return `<div class="mcard" id="m-${i}"><div class="pic" style="--bgc:${m.bgc}"><span class="stock" style="${l?'':'color:#d6285a'}">${l?l+' left':'Out of stock'}</span><svg viewBox="0 0 160 150" width="170" height="160">${m.svg(col)}</svg></div><div class="b"><h4>${m.label}</h4><p>${m.d}</p><div class="swatches">${m.sw.map(s=>`<button class="sw ${s===col?'on':''}" style="background:${s}" data-act="swatch" data-m="${i}" data-s="${s}" aria-label="colour"></button>`).join('')}</div><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--mint)">${m.c==='Light'?'Borrowed · please return':m.c==='VIP'?'For VIP guests':'Free with your ticket'}</b><button class="heart ${inW?'on':''}" data-act="wish" data-w="${m.n}">${inW?'✓ On my list':'+ My kit list'}</button></div></div></div>` }).join('') }
+  $('#mgrid').innerHTML=MERCH.map((m,i)=>({m,i})).filter(({m})=>mcat==='All'||m.c===mcat).map(({m,i})=>{ const col=msel[i]??m.sw[0], on=sel.includes(m.n), l=merchLeft(m.n), imgs=merchInv(m.n).images||[];
+    const pic=imgs.length?`<button style="padding:0;width:100%;height:100%" data-act="vlogImg" data-src="${esc(merchImg(imgs[0]))}"><img src="${esc(merchImg(imgs[0]))}" alt="${esc(m.label)}" style="width:100%;height:100%;object-fit:cover"></button>`:`<svg viewBox="0 0 160 150" width="170" height="160">${m.svg(col)}</svg>`;
+    return `<div class="mcard" id="m-${i}"><div class="pic" style="--bgc:${m.bgc}"><span class="stock" style="${l?'':'color:#d6285a'}">${l?l+' left':'Out of stock'}</span>${pic}</div><div class="b"><h4>${m.label}</h4><p>${m.d}</p>
+     ${imgs.length>1?`<div class="thumbs" style="margin:0 0 10px">${imgs.slice(1).map(p=>`<button class="thumb" style="width:56px;height:44px;padding:0" data-act="vlogImg" data-src="${esc(merchImg(p))}"><img src="${esc(merchImg(p))}" alt=""></button>`).join('')}</div>`:imgs.length?'':`<div class="swatches">${m.sw.map(s=>`<button class="sw ${s===col?'on':''}" style="background:${s}" data-act="swatch" data-m="${i}" data-s="${s}" aria-label="colour"></button>`).join('')}</div>`}
+     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><small style="color:var(--ink2);font-weight:700">Max 1 per person</small>
+     <button class="heart ${on?'on':''}" data-act="wish" data-w="${m.n}" ${!on&&!l?'disabled style="opacity:.5"':''}>${on?'✓ Selected (1)':l?'+ Select (1)':'Out of stock'}</button></div></div></div>` }).join('') }
 
 /* ====== CONTACT ====== */
 $('#cform').onsubmit=e=>{ e.preventDefault(); const txt=`To: 10C9 Music Concert team\nTopic: ${$('#ctopic').value}\nFrom: ${$('#cname').value}${$('#crole').value?' ('+$('#crole').value+')':''}\n\n${$('#cmsg').value}`;
@@ -454,7 +465,7 @@ const kpi=(l,v,s,p)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><
 const pct=(a,b)=>b?a/b*100:0;
 function renderAdmin(){ if(!isAdmin()) return;
   if(adm.tab!=='checkin'&&adm.scanning){ stopScanner(); adm.scanning=false }
-  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['quiz','❓ Activity results'],['vlog','🎬 Vlog review'],['merch','🛍️ Concert kit']];
+  const tabs=[['checkin','📲 Check-in (scan QR)'],['overview','📊 Overview'],['users','👥 Users'],['tickets','🎫 Tickets & Seats'],['quiz','❓ Activity results'],['vlog','🎬 Vlog review'],['merch','🛍️ Merchandise']];
   $('#admTabs').innerHTML=tabs.map(t=>`<button class="cat ${adm.tab===t[0]?'on':''}" data-act="admtab" data-t="${t[0]}">${t[1]}</button>`).join('');
   $('#admBody').innerHTML=({checkin:admCheckin,overview:admOverview,users:admUsers,tickets:admTickets,quiz:admQuiz,vlog:admVlog,merch:admMerch})[adm.tab]();
   if(adm.tab==='checkin') bindCheckin() }
@@ -499,7 +510,7 @@ function admOverview(){
     ${kpi('📚 Notebooks',NB.received,`received · ${NB.expected} expected from bookings`,pct(NB.received,NB.expected))}
     ${kpi('Passports completed',done,`of ${guests.length} checked-in guests (6/6)`,pct(done,guests.length))}
     ${kpi('Sing & Fill ≥ 4/6',sf.length?Math.round(pct(sf.filter(a=>a.score>=4).length,sf.length))+'%':'—',`${sf.length} answers`)}
-    ${kpi('Concert kit handed out',given,`of ${stock} in stock · ${wishes} kit-list requests`,pct(given,stock))}
+    ${kpi('Merchandise handed out',given,`of ${stock} in stock · ${wishes} selected`,pct(given,stock))}
   </div>
   ${BOOKABLE.map(e=>`<div class="apanel"><h3>${e.t} — tickets by type</h3><div class="bars">${TYPES.map(t=>{ const i=issued(e.id,t.id),c=cap(e.id,t.id); return `<div class="bar-row" title="${t.name}: ${i} of ${c}"><span>${t.em} ${t.name}</span>${meter(pct(i,c))}<span class="num">${i}/${c}</span></div>` }).join('')}</div></div>`).join('')}
   <div class="apanel"><h3>Danger zone</h3><p style="font-size:14px;color:var(--ink2);margin-bottom:10px">Clear all tickets, activity results, votes, kit lists, user accounts (admins are kept) and reset stock — e.g. after a rehearsal run. Do not use on concert day.</p><button class="btn danger xs" data-act="resetdemo" data-confirm="Tap again to reset everything">Reset event data</button></div>` }
@@ -560,18 +571,21 @@ function admVlog(){ const {posts,comments}=vlogData(), q=adm.q.toLowerCase(), P=
   ${[...comments].reverse().slice(0,100).map(c=>`<tr><td>${fmtDate(c.at)}</td><td>${esc(c.author)}<br><small style="color:var(--ink2)">${esc(c.cls)}</small></td><td>${esc(posts.find(p=>p.id===c.postId)?.title||'—')}</td><td style="max-width:360px;white-space:pre-wrap">${esc(c.body)}</td><td><button class="btn danger xs" data-act="cDel" data-id="${c.id}" data-confirm="Delete?">🗑</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No comments yet</td></tr>'}
   </tbody></table></div>` }
 
-function admMerch(){ const totalS=MERCH.reduce((a,m)=>a+merchInv(m.n).stock,0), totalG=MERCH.reduce((a,m)=>a+merchInv(m.n).given,0);
+function admMerch(){ const totalS=MERCH.reduce((a,m)=>a+merchInv(m.n).stock,0), totalG=MERCH.reduce((a,m)=>a+merchInv(m.n).given,0), totalR=MERCH.reduce((a,m)=>a+(merchInv(m.n).requested||0),0);
   const wishers=n=>Object.entries(store.wishAll()).filter(([u,l])=>l.includes(n)).map(([u])=>u);
-  return `<div class="kpis">${kpi('Total stock',totalS,'items across the collection')}${kpi('Given out',totalG,`${Math.round(pct(totalG,totalS))}% of stock`,pct(totalG,totalS))}${kpi('Remaining',totalS-totalG,'items left to give')}</div>
-  <div class="apanel"><h3>Stock & giveaways</h3><table class="t"><thead><tr><th>Item</th><th>Stock (edit)</th><th>Given out</th><th>Remaining</th><th style="width:18%">Given</th><th>Requested by</th></tr></thead><tbody>
-  ${MERCH.map((m,i)=>{ const inv=merchInv(m.n), w=wishers(m.n); return `<tr><td><b>${m.label}</b><br><small style="color:var(--ink2)">${m.c}</small></td><td><input type="number" id="stk-${i}" min="${inv.given}" value="${inv.stock}"></td>
+  return `<div class="kpis">${kpi('Total stock',totalS,'items across the collection')}${kpi('Selected',totalR,'reserved by users (1 each)')}${kpi('Handed out',totalG,`${Math.round(pct(totalG,totalS))}% of stock`,pct(totalG,totalS))}${kpi('Available',Math.max(0,totalS-totalG-totalR),'left to select')}</div>
+  <div class="apanel"><h3>Products, photos &amp; stock</h3><table class="t"><thead><tr><th>Product</th><th>Photos (max 4)</th><th>Stock (edit)</th><th>Handed out</th><th>Selected</th><th>Available</th><th>Selected by</th></tr></thead><tbody>
+  ${MERCH.map((m,i)=>{ const inv=merchInv(m.n), w=wishers(m.n), imgs=inv.images||[]; return `<tr><td><b>${m.label}</b><br><small style="color:var(--ink2)">${m.c}</small></td>
+    <td><div class="thumbs" style="margin:0">${imgs.map((p,k)=>`<div class="thumb" style="width:64px;height:50px"><img src="${esc(merchImg(p))}" alt=""><button type="button" data-act="mImgDel" data-n="${m.n}" data-i="${k}" data-confirm="✓?" aria-label="Remove photo">✕</button></div>`).join('')}
+      ${imgs.length<4?`<label class="drop" style="padding:6px 10px;font-size:12px" for="mf-${i}">📷 Add</label><input id="mf-${i}" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden data-chg="merchPhoto" data-n="${m.n}">`:''}</div></td>
+    <td><input type="number" id="stk-${i}" min="${inv.given+(inv.requested||0)}" value="${inv.stock}"></td>
     <td><div style="display:flex;align-items:center;gap:6px"><button class="btn ghost xs" data-act="give" data-n="${m.n}" data-d="-1">−</button><span class="num" style="min-width:28px;text-align:center">${inv.given}</span><button class="btn ok xs" data-act="give" data-n="${m.n}" data-d="1">+1</button></div></td>
-    <td class="num">${inv.stock-inv.given}</td><td>${meter(pct(inv.given,inv.stock))}</td>
-    <td>${w.length?`<div class="chips">${w.map(u=>`<span class="uchip">@${esc(userName(u))} <button class="btn ok xs" data-act="givewish" data-n="${m.n}" data-u="${u}" title="Give this item and remove it from their kit list">Give</button></span>`).join('')}</div>`:'<small style="color:var(--ink2)">—</small>'}</td></tr>` }).join('')}
-  </tbody></table><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px"><small style="color:var(--ink2)">Use +1 at the check-in desk each time an item is handed out (− when a light stick comes back). "Give" also clears it from that guest's kit list.</small><button class="btn primary xs" data-act="savestock">💾 Save stock</button></div></div>` }
+    <td class="num">${inv.requested||0}</td><td class="num">${merchLeft(m.n)}</td>
+    <td>${w.length?`<div class="chips">${w.map(u=>`<span class="uchip">@${esc(userName(u))} <button class="btn ok xs" data-act="givewish" data-n="${m.n}" data-u="${u}" title="Hand this item to the guest">Give</button></span>`).join('')}</div>`:'<small style="color:var(--ink2)">—</small>'}</td></tr>` }).join('')}
+  </tbody></table><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px"><small style="color:var(--ink2)">Available = stock − handed out − selected. "Give" hands the item to that guest. Photos appear on the Merchandise page (first photo is the main one).</small><button class="btn primary xs" data-act="savestock">💾 Save stock</button></div></div>` }
 
 /* ====== SEARCH ====== */
-const INDEX=[{t:'Performance Vlog',s:'Videos, photos & comments',i:'🎬',go:'performance'},...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'My stickers',i:'🏅',go:'museum',hall:'h-pass'},{t:'Sing & Fill',s:'Sticker 2',i:'🎶',go:'museum',hall:'h-sing'},...MERCH.map((m,i)=>({t:m.label,s:'Concert kit · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
+const INDEX=[{t:'Performance Vlog',s:'Videos, photos & comments',i:'🎬',go:'performance'},...INST.map((x,i)=>({t:x.n,s:'Instrument Museum · '+x.o,i:'🎸',go:'museum',hall:'h-inst',el:'inst-'+i})),{t:'Physics Quiz',s:'Sticker 5',i:'❓',go:'museum',hall:'h-quiz'},{t:'Beat Light · Digital Stage Lab',s:'Sticker 6',i:'💡',go:'museum',hall:'h-lab'},{t:'Concert Passport',s:'My stickers',i:'🏅',go:'museum',hall:'h-pass'},{t:'Sing & Fill',s:'Sticker 2',i:'🎶',go:'museum',hall:'h-sing'},...MERCH.map((m,i)=>({t:m.label,s:'Merchandise · '+m.c,i:'🛍️',go:'merch',el:'m-'+i})),...EVENTS.map(e=>({t:e.t,s:e.m,i:'🎫',go:e.book?'ticketbox':e.go,ev:e.book?e.id:null}))];
 $('#q').oninput=e=>{ const v=e.target.value.trim().toLowerCase(), r=$('#results'); if(!v){ r.classList.remove('show'); return }
   const hits=INDEX.filter(x=>(x.t+' '+x.s).toLowerCase().includes(v)).slice(0,7);
   r.innerHTML=hits.length?hits.map((h,k)=>`<button data-h="${k}"><span>${h.i}</span><span>${h.t}<br><small>${h.s}</small></span></button>`).join(''):'<div style="padding:12px 16px;color:var(--ink2)">No results</div>'; r.classList.add('show');
