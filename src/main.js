@@ -5,7 +5,7 @@ import { SEATS_PER_ROW, USERNAME_RE } from './config.js';
 import { stickersFor, startScanner, stopScanner, findCode } from './checkin.js';
 
 /* ====== EDIT HERE: show date & time ====== */
-const SHOW = { date: new Date('2026-11-23T13:30:00+07:00'), label: 'Mon, 23 Nov 2026 · 13:30–15:00' };
+const SHOW = { date: new Date('2026-11-25T07:30:00+07:00'), label: 'Wed, 25 Nov 2026 · 7:30–9:00' };
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,11 +21,11 @@ function confetti(){ const cs=['#ff5c8a','#ffc93c','#2ec4a6','#3fa9f5','#8b6cf6'
 /* ====== CONTENT (from the STEAM lesson plan "MUSIC FOR CHANGE") ====== */
 const EVENTS=[
  {id:'main',cat:'Concert',em:'🎤',bg:'linear-gradient(135deg,#ff5c8a,#ffc93c)',t:'MUSIC FOR CHANGE – Mini Charity Concert',m:SHOW.label,v:'School Hall',book:true},
- {id:'checkin',cat:'Check-in',em:'📲',bg:'linear-gradient(135deg,#8b6cf6,#3fa9f5)',t:'Check-in: scan your QR, hand in your notebooks',m:'Mon 23 Nov · 13:15–13:30',v:'Hall entrance · 3 desks',go:'ticketbox'},
- {id:'mashup',cat:'Show',em:'🥁',bg:'linear-gradient(135deg,#ff8a5c,#8b6cf6)',t:'Mashup: Baby Shark → Baby → I Am the Best',m:'13:42–13:54 · with Q&A',v:'Main stage',go:'performance'},
- {id:'singfill',cat:'Show',em:'🎶',bg:'linear-gradient(135deg,#2ec4a6,#3fa9f5)',t:'Sing & Fill: listen and fill in 6 words',m:'13:54–14:06',v:'Main stage',go:'performance'},
- {id:'zoneA',cat:'Backstage Tour',em:'🎸',bg:'linear-gradient(135deg,#ffc93c,#ff8a5c)',t:'Zone A · Instrument Museum',m:'14:06–14:43 · 2 rounds',v:'Zone A',go:'museum'},
- {id:'zoneB',cat:'Backstage Tour',em:'💡',bg:'linear-gradient(135deg,#3fa9f5,#2ec4a6)',t:'Zone B · Digital Stage Lab (Beat Light)',m:'14:06–14:43 · 2 rounds',v:'Zone B',go:'museum'}
+ {id:'checkin',cat:'Check-in',em:'📲',bg:'linear-gradient(135deg,#8b6cf6,#3fa9f5)',t:'Check-in: scan your QR, hand in your notebooks',m:'Wed 25 Nov · 7:00–7:30',v:'Hall entrance · 3 desks',go:'ticketbox'},
+ {id:'mashup',cat:'Show',em:'🥁',bg:'linear-gradient(135deg,#ff8a5c,#8b6cf6)',t:'Mashup: Baby Shark → Baby → I Am the Best',m:'7:42–7:54 · with Q&A',v:'Main stage',go:'performance'},
+ {id:'singfill',cat:'Show',em:'🎶',bg:'linear-gradient(135deg,#2ec4a6,#3fa9f5)',t:'Sing & Fill: listen and fill in 6 words',m:'7:54–8:06',v:'Main stage',go:'performance'},
+ {id:'zoneA',cat:'Backstage Tour',em:'🎸',bg:'linear-gradient(135deg,#ffc93c,#ff8a5c)',t:'Zone A · Instrument Museum',m:'8:06–8:43 · 2 rounds',v:'Zone A',go:'museum'},
+ {id:'zoneB',cat:'Backstage Tour',em:'💡',bg:'linear-gradient(135deg,#3fa9f5,#2ec4a6)',t:'Zone B · Digital Stage Lab (Beat Light)',m:'8:06–8:43 · 2 rounds',v:'Zone B',go:'museum'}
 ];
 const BOOKABLE=EVENTS.filter(e=>e.book);
 // Ticket types reuse the database zones A / B / F (no schema change). nb = notebooks per ticket.
@@ -44,14 +44,14 @@ const ACTS=[
  {id:4,name:'Digital Stage',group:'Group 4',genre:'Digital stage',g:'linear-gradient(135deg,#ffc93c,#ff8a5c)',desc:'How can the screen, the website and the lights serve the audience automatically and follow the music?',songs:[['🖥️ Stage screen, website, QR codes, notebook counter','T'],['💡 Light sticks & Beat Light','E'],['💻 IT: input → processing → output','T']]}
 ];
 const RUN=[
- ['13:15','Check-in (3 desks): scan QR, hand in notebooks, get passport & light stick · Sticker 1','#8b6cf6'],
- ['13:30','Warm-up: notebook counter on screen; MC shows a check-in in English','#ff5c8a'],
- ['13:36','Opening: bilingual MCs introduce the 4 parts; Mr Tran Quang\'s welcome','#ff8a5c'],
- ['13:42','Mashup (6′) with recycled instruments, light sticks & Beat Light + Q&A with the band (★ Bonus)','#ffc93c'],
- ['13:54','Sing & Fill: scan the QR, fill in 6 words · Sticker 2','#2ec4a6'],
- ['14:06','Backstage Tour: Zone A Instrument Museum ⇄ Zone B Digital Stage Lab · Stickers 3–6','#3fa9f5'],
- ['14:43','Data report: notebooks, completed passports, Sing & Fill results; teachers\' comments','#8b6cf6'],
- ['14:53','Wrap-up: Unit 3 words, and / but / so, word stress — "Music can change lives when we act together."','#ff5c8a']
+ ['7:00','Check-in (3 desks): scan QR, hand in notebooks, get passport & light stick · Sticker 1','#8b6cf6'],
+ ['7:30','Warm-up: notebook counter on screen; MC shows a check-in in English','#ff5c8a'],
+ ['7:36','Opening: bilingual MCs introduce the 4 parts; Mr Tran Quang\'s welcome','#ff8a5c'],
+ ['7:42','Mashup (6′) with recycled instruments, light sticks & Beat Light + Q&A with the band (★ Bonus)','#ffc93c'],
+ ['7:54','Sing & Fill: scan the QR, fill in 6 words · Sticker 2','#2ec4a6'],
+ ['8:06','Backstage Tour: Zone A Instrument Museum ⇄ Zone B Digital Stage Lab · Stickers 3–6','#3fa9f5'],
+ ['8:43','Data report: notebooks, completed passports, Sing & Fill results; teachers\' comments','#8b6cf6'],
+ ['8:53','Wrap-up: Unit 3 words, and / but / so, word stress — "Music can change lives when we act together."','#ff5c8a']
 ];
 const INST=[
  {n:'Guitar',o:'Recycled · 6 strings',d:'This guitar has six strings. We made it from a wooden box. We measured the string four times to put fret 12 in the middle.',vi:'Đàn ghi-ta 6 dây làm từ thùng gỗ. Nhóm đo dây 4 lần để đặt phím 12 ở chính giữa dây.',q:'Press a string at a fret. The string is shorter, so the sound is ___.',f:[165,247,330,415,494,659],w:'triangle',svg:'<circle cx="55" cy="70" r="28" fill="#ff8a5c"/><circle cx="85" cy="62" r="20" fill="#ff8a5c"/><circle cx="62" cy="68" r="8" fill="#2b2350"/><rect x="95" y="55" width="55" height="9" fill="#6b4423"/>'},
@@ -265,7 +265,7 @@ function renderTB(){
     body.innerHTML=`<div class="two"><div class="field"><label>Full name</label><input value="${esc(u.name)}" disabled></div><div class="field"><label>Class / role</label><input value="${esc(u.cls)||'—'}" disabled></div></div>
      <div class="field"><label>Phone or email (optional)</label><input id="fPh" value="${esc(tb.phone)}"></div>
      <div class="field"><label>Photos (chụp ảnh) *</label><div class="pledges"><button class="pledge ${tb.photo==='Yes'?'on':''}" data-p="Yes">📸 Yes, you may take my photo</button><button class="pledge ${tb.photo==='No'?'on':''}" data-p="No">🔴 No photo, please</button></div></div>
-     <div class="note-box">📚 Please bring <b>${T.nb} notebook${T.nb>1?'s':''}</b> to the check-in desk (13:15–13:30). If you say no to photos, you get a red dot on your passport.</div>`;
+     <div class="note-box">📚 Please bring <b>${T.nb} notebook${T.nb>1?'s':''}</b> to the check-in desk (7:00–7:30). If you say no to photos, you get a red dot on your passport.</div>`;
     $('#fPh').oninput=e=>tb.phone=e.target.value;
     $$('#stepBody .pledge').forEach(b=>b.onclick=()=>{ tb.photo=b.dataset.p; renderTB() });
     act.innerHTML=`<button class="btn ghost" id="bk">← Back</button><button class="btn primary" id="nx" ${tb.photo?'':'disabled'}>Confirm booking 🎉</button>`;
