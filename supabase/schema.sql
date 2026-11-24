@@ -449,6 +449,19 @@ grant execute on function public.give_merch(text,int,uuid) to authenticated;
 grant execute on function public.reset_event_data() to authenticated, service_role;
 grant execute on function public.ticket_availability() to anon, authenticated;
 
+-- Data API access (newer Supabase projects do not grant these automatically).
+-- Row Level Security above still decides which rows each user can see or change.
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.ticket_inventory, public.merch_inventory, public.votes to anon, authenticated;
+grant select on public.profiles, public.tickets, public.quiz_attempts, public.wishlist to authenticated;
+grant update (role, active) on public.profiles to authenticated;
+grant insert on public.quiz_attempts to authenticated;
+grant insert, delete on public.votes to authenticated;
+grant insert, delete on public.wishlist to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 -- =====================================================================
 -- AFTER your first sign-up on the website, make yourself admin
 -- (replace your_username, then run this line on its own):
