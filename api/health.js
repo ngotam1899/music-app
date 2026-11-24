@@ -5,21 +5,23 @@ import { usernameToEmail } from '../src/config.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const E = process.env;
+  const url = E.SUPABASE_URL || E.VITE_SUPABASE_URL || E.NEXT_PUBLIC_SUPABASE_URL;
+  const browserUrl = E.VITE_SUPABASE_URL || E.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = E.SUPABASE_SERVICE_ROLE_KEY || E.SUPABASE_SECRET_KEY;
   const report = {
     env: {
-      VITE_SUPABASE_URL: Boolean(process.env.VITE_SUPABASE_URL),
-      VITE_SUPABASE_ANON_KEY: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
-      SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
-      SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-      urlsMatch: !process.env.SUPABASE_URL || !process.env.VITE_SUPABASE_URL
-        || process.env.SUPABASE_URL.replace(/\/+$/, '') === process.env.VITE_SUPABASE_URL.replace(/\/+$/, ''),
+      browserSupabaseUrl: Boolean(browserUrl),
+      browserAnonKey: Boolean(E.VITE_SUPABASE_ANON_KEY || E.NEXT_PUBLIC_SUPABASE_ANON_KEY || E.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
+      serverSupabaseUrl: Boolean(url),
+      serverServiceKey: Boolean(serviceKey),
+      urlsMatch: !url || !browserUrl || url.replace(/\/+$/, '') === browserUrl.replace(/\/+$/, ''),
     },
     usernameEmailExample: usernameToEmail('example_user'),
     checks: {},
   };
-  if (url && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    const sb = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  if (url && serviceKey) {
+    const sb = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const check = async (name, fn) => {
       try { const { error } = await fn(); report.checks[name] = error ? 'ERROR: ' + error.message : 'ok' }
       catch (e) { report.checks[name] = 'ERROR: ' + (e.message || String(e)) }
