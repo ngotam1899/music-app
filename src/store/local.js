@@ -95,6 +95,7 @@ export const localStore = {
     const t = { code, evId: ev, ev: evTitle, when: evWhen, typeId: type, type: typeName, qty, seatList: seated ? [...seats] : [], seats: seated ? seats.join(', ') : 'Standing', u: u.u, name: u.name, cls: u.cls, phone, pledge, status: 'active', at: Date.now() };
     DB.tickets.unshift(t); save(); return mapTicket(t);
   },
+  async getTicketByCode(code) { const t = DB.tickets.find(x => x.code === code); return t ? mapTicket(t) : null },
   async setTicketStatus(code, status) {
     const me = requireUser(), t = DB.tickets.find(x => x.code === code) || fail('Ticket not found');
     if (me.role !== 'admin' && !(t.u === me.u && t.status === 'active' && status === 'cancelled')) fail('Not allowed');

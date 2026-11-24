@@ -497,11 +497,13 @@ $('#q').oninput=e=>{ const v=e.target.value.trim().toLowerCase(), r=$('#results'
 /* ====== START ====== */
 function renderAll(){ renderHeader(); renderNb(); renderEvents(); renderTB(); renderPerf(); renderMerch(); renderPassport(); if($('#admin').classList.contains('active')) renderAdmin() }
 // A ticket QR opens  <site>/?ticket=CODE  — staff (admin) go straight to check-in; guests see their ticket.
-function openTicketLink(code){ history.replaceState(null,'',location.pathname+(location.hash||'#home'));
+async function openTicketLink(code){ history.replaceState(null,'',location.pathname+(location.hash||'#home'));
   if(isAdmin()){ adm.tab='checkin'; adm.code=code; go('admin'); return }
-  const mine=store?.myTickets().find(t=>t.code===code);
-  if(mine){ openTix(); return }
-  $('#tixList').innerHTML=`<div class="empty"><div style="font-size:52px">🎫</div><h3 style="font-family:Fredoka">Ticket ${esc(code)}</h3><p>Please show this QR code at the check-in desk.<br>Staff: log in with an admin account to check this guest in.</p><button class="btn primary" style="margin-top:12px" data-act="staffLogin" data-code="${esc(code)}">Staff log in</button></div>`;
+  const staffBtn=`<div style="text-align:center;margin-top:14px"><button class="btn ghost xs" data-act="staffLogin" data-code="${esc(code)}">Staff: log in to check in</button></div>`;
+  let t=store?.myTickets().find(x=>x.code===code)||null, err='';
+  if(!t){ try{ t=await store.getTicketByCode(code) }catch(e){ err=e.message } }
+  $('#tixList').innerHTML=t?ticketHTML(t)+`<p style="text-align:center;margin-top:12px;color:var(--ink2);font-size:14px">Show this ticket at the check-in desk.</p>`+(me()?'':staffBtn)
+    :`<div class="empty"><div style="font-size:52px">❌</div><h3 style="font-family:Fredoka">Ticket not found</h3><p>${esc(err)||`The code ${esc(code)} does not match any ticket.`}</p></div>`+staffBtn;
   $('#tixModal').classList.add('show') }
 (async()=>{
   try{ store=await createStore(); await store.init() }
@@ -510,7 +512,7 @@ function openTicketLink(code){ history.replaceState(null,'',location.pathname+(l
     bar.style.cssText='background:#2b2350;color:#ffc93c;text-align:center;padding:10px 16px;font-weight:700;font-size:14px';
     bar.textContent='⚠️ '+NOT_CONFIGURED_MESSAGE; document.body.prepend(bar) }
   renderQuiz(); renderSingFill(); renderAll(); go(location.hash.slice(1)||'home');
-  const tk=findCode(new URLSearchParams(location.search).get('ticket')); if(tk) openTicketLink(tk);
+  const tk=findCode(new URLSearchParams(location.search).get('ticket')); if(tk) await openTicketLink(tk);
   // keep numbers fresh when the tab is shown again (e.g. admin dashboard on the entrance laptop)
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&store&&!busy) store.refresh().then(renderAll).catch(()=>{}) });
 })();

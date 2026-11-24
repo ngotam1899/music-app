@@ -434,6 +434,18 @@ begin
   where m.item = d.item;
 end $$;
 
+-- Public e-ticket view for a scanned QR code: exact code match only, no phone or username.
+create or replace function public.get_ticket_public(p_code text)
+returns table (code text, event_id text, event_title text, event_when text, type_id text, type_name text,
+               qty int, seats text[], name text, cls text, pledge text, status text, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select t.code, t.event_id, t.event_title, t.event_when, t.type_id, t.type_name,
+         t.qty, t.seats, t.name, t.cls, t.pledge, t.status, t.created_at
+  from public.tickets t
+  where t.code = upper(trim(p_code))
+  limit 1;
+$$;
+
 -- Function permissions
 revoke execute on function public.book_ticket(text,text,text,text,text,int,text[],text,text) from public, anon;
 revoke execute on function public.set_ticket_status(text,text) from public, anon;
@@ -448,6 +460,8 @@ grant execute on function public.save_stock(jsonb) to authenticated;
 grant execute on function public.give_merch(text,int,uuid) to authenticated;
 grant execute on function public.reset_event_data() to authenticated, service_role;
 grant execute on function public.ticket_availability() to anon, authenticated;
+revoke execute on function public.get_ticket_public(text) from public;
+grant execute on function public.get_ticket_public(text) to anon, authenticated;
 
 -- Data API access (newer Supabase projects do not grant these automatically).
 -- Row Level Security above still decides which rows each user can see or change.

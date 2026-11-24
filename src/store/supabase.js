@@ -126,6 +126,12 @@ export function createSupabaseStore(url, anonKey) {
       const r = ok(await sb.rpc('book_ticket', { p_event: ev, p_event_title: evTitle, p_event_when: evWhen, p_type: type, p_type_name: typeName, p_qty: qty, p_seats: seats, p_phone: phone || '', p_pledge: pledge || '' }));
       await load(); return mapTicket(r);
     },
+    // Public ticket view for a scanned QR (no login). Returns only what is printed on the e-ticket.
+    async getTicketByCode(code) {
+      const rows = ok(await sb.rpc('get_ticket_public', { p_code: code }));
+      const r = Array.isArray(rows) ? rows[0] : rows;
+      return r ? mapTicket({ ...r, user_id: null, username: '', phone: '' }) : null;
+    },
     async setTicketStatus(code, status) { ok(await sb.rpc('set_ticket_status', { p_code: code, p_status: status })); await load() },
     async toggleVote(id) {
       const me = uid(), voted = (S.votes[id] || []).includes(me);

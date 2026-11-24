@@ -38,7 +38,7 @@ function unconfiguredStore() {
     tickets: () => [], myTickets: () => [], quiz: () => [], myQuiz: () => [], votes: () => [], myWish: () => [], wishAll: () => ({}),
     merch: n => ({ stock: DEFAULT_STOCK[n] ?? 0, given: 0 }),
     login: no, signup: no, logout: async () => { }, changePassword: no,
-    book: no, setTicketStatus: no, toggleVote: no, toggleWish: no, saveQuiz: no,
+    book: no, setTicketStatus: no, getTicketByCode: no, toggleVote: no, toggleWish: no, saveQuiz: no,
     setRole: no, setActive: no, resetPassword: no, deleteUser: no, addUser: no,
     saveCapacities: no, giveMerch: no, saveStock: no, resetEvent: no,
   };
